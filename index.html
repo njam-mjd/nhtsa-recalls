@@ -496,6 +496,76 @@
     font-style: italic;
   }
 
+  /* ── NOTIFICATION BELL ── */
+  .notif-btn {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 5px 12px;
+    border: 1px solid rgba(255,255,255,0.15);
+    border-radius: 20px;
+    background: transparent;
+    color: rgba(255,255,255,0.6);
+    font-family: inherit;
+    font-size: 11px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+    white-space: nowrap;
+  }
+  .notif-btn:hover { border-color: rgba(255,255,255,0.3); color: #fff; }
+  .notif-btn.enabled {
+    border-color: var(--accent);
+    color: var(--accent);
+  }
+  .notif-btn svg { width: 14px; height: 14px; }
+
+  /* ── TOAST BANNER ── */
+  .toast-banner {
+    position: fixed;
+    top: 64px;
+    left: 50%;
+    transform: translateX(-50%) translateY(-120%);
+    background: var(--critical-red);
+    color: #fff;
+    padding: 12px 20px;
+    border-radius: var(--radius);
+    box-shadow: 0 8px 30px rgba(0,0,0,0.2);
+    font-size: 13px;
+    font-weight: 600;
+    z-index: 200;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+    max-width: 500px;
+  }
+  .toast-banner.visible {
+    transform: translateX(-50%) translateY(0);
+  }
+  .toast-banner .toast-close {
+    background: none;
+    border: none;
+    color: #fff;
+    font-size: 18px;
+    cursor: pointer;
+    padding: 0 0 0 8px;
+    opacity: 0.7;
+  }
+  .toast-banner .toast-close:hover { opacity: 1; }
+
+  /* ── AUTO-REFRESH INDICATOR ── */
+  .refresh-bar {
+    height: 2px;
+    background: var(--accent);
+    position: fixed;
+    top: 56px;
+    left: 0;
+    width: 0%;
+    z-index: 101;
+    transition: width 0.5s ease;
+  }
+
   /* ── RESPONSIVE ── */
   @media (max-width: 768px) {
     .header-meta { display: none; }
@@ -529,11 +599,25 @@
       <span class="header-title">Recall Alert Dashboard</span>
     </div>
     <div class="header-meta">
+      <button class="notif-btn" id="notifBtn" onclick="toggleNotifications()" title="Enable browser notifications for critical recalls">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+        <span id="notifLabel">Alerts Off</span>
+      </button>
       <span class="dot"></span>
       <span id="lastUpdated">Loading…</span>
     </div>
   </div>
 </header>
+
+<!-- TOAST BANNER FOR NEW CRITICAL RECALLS -->
+<div class="toast-banner" id="toastBanner">
+  <span>⚠️</span>
+  <span id="toastText"></span>
+  <button class="toast-close" onclick="dismissToast()">×</button>
+</div>
+
+<!-- AUTO-REFRESH PROGRESS BAR -->
+<div class="refresh-bar" id="refreshBar"></div>
 
 <!-- HERO STATS -->
 <section class="hero">
@@ -577,6 +661,9 @@
     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
     <input type="text" id="searchInput" placeholder="Search manufacturer, component, description…">
   </div>
+  <select class="date-select" id="mfgFilter">
+    <option value="all">All Manufacturers</option>
+  </select>
   <div class="filter-group" id="typeFilters">
     <button class="filter-btn active" data-filter="all">All Types</button>
     <button class="filter-btn" data-filter="Vehicle">Vehicles</button>
@@ -584,6 +671,12 @@
     <button class="filter-btn" data-filter="Tire">Tires</button>
     <button class="filter-btn" data-filter="Child Seat">Car Seats</button>
   </div>
+  <select class="date-select" id="sortBy">
+    <option value="date">Sort: Newest First</option>
+    <option value="manufacturer">Sort: Manufacturer A–Z</option>
+    <option value="affected">Sort: Most Units</option>
+    <option value="component">Sort: Component A–Z</option>
+  </select>
   <select class="date-select" id="dateRange">
     <option value="7">Last 7 days</option>
     <option value="14">Last 14 days</option>
@@ -614,7 +707,7 @@
 <footer class="site-footer">
   <div class="footer-left">
     Data source: NHTSA Office of Defects Investigation via <a href="https://data.transportation.gov/Automobiles/Recalls-Data/6axg-epim" target="_blank">data.transportation.gov</a><br>
-    Auto-refreshes on page load. Bookmark and check AM + PM for twice-daily monitoring.
+    Auto-refreshes every 6 hours while tab is open. Enable alerts for browser notifications on critical recalls.
   </div>
   <div class="footer-right">
     <a href="https://www.nhtsa.gov/recalls" target="_blank">NHTSA Recalls →</a>
@@ -629,23 +722,193 @@
   const API_BASE = 'https://data.transportation.gov/resource/6axg-epim.json';
   const PAGE_SIZE = 25;
   const CACHE_KEY = 'nhtsa_recall_cache';
-  const CACHE_TTL = 6 * 60 * 60 * 1000; // 6 hours — supports twice-daily checks
+  const SEEN_IDS_KEY = 'nhtsa_seen_critical_ids';
+  const NOTIF_PREF_KEY = 'nhtsa_notif_enabled';
+  const CACHE_TTL = 6 * 60 * 60 * 1000; // 6 hours
+  const REFRESH_INTERVAL = 6 * 60 * 60 * 1000; // 6 hours auto-poll
+  const REFRESH_BAR_INTERVAL = 60 * 1000; // update progress bar every minute
 
   let allRecalls = [];
   let filteredRecalls = [];
   let currentPage = 1;
   let activeType = 'all';
+  let activeMfg = 'all';
+  let refreshTimer = null;
+  let barTimer = null;
+  let lastFetchTime = Date.now();
+
+  // ── NOTIFICATIONS ──
+  function isNotifEnabled() {
+    return localStorage.getItem(NOTIF_PREF_KEY) === 'true';
+  }
+
+  function updateNotifUI() {
+    const btn = document.getElementById('notifBtn');
+    const label = document.getElementById('notifLabel');
+    if (isNotifEnabled() && Notification.permission === 'granted') {
+      btn.classList.add('enabled');
+      label.textContent = 'Alerts On';
+    } else {
+      btn.classList.remove('enabled');
+      label.textContent = 'Alerts Off';
+    }
+  }
+
+  window.toggleNotifications = async function() {
+    if (!('Notification' in window)) {
+      alert('Your browser does not support notifications.');
+      return;
+    }
+
+    if (isNotifEnabled()) {
+      // Turn off
+      localStorage.setItem(NOTIF_PREF_KEY, 'false');
+      updateNotifUI();
+      return;
+    }
+
+    // Request permission
+    const perm = await Notification.requestPermission();
+    if (perm === 'granted') {
+      localStorage.setItem(NOTIF_PREF_KEY, 'true');
+      updateNotifUI();
+      // Send a test notification
+      new Notification('NHTSA Watch — Alerts Enabled', {
+        body: 'You\'ll be notified when new Do Not Drive or Park Outside recalls are posted.',
+        icon: 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><text y=".9em" font-size="90">🚨</text></svg>'
+      });
+    } else {
+      localStorage.setItem(NOTIF_PREF_KEY, 'false');
+      updateNotifUI();
+      if (perm === 'denied') {
+        alert('Notifications are blocked by your browser. Check your browser settings to allow them for this site.');
+      }
+    }
+  };
+
+  function getSeenCriticalIds() {
+    try {
+      return JSON.parse(localStorage.getItem(SEEN_IDS_KEY) || '[]');
+    } catch(e) { return []; }
+  }
+
+  function markCriticalIdsSeen(ids) {
+    try {
+      // Keep last 500 IDs to prevent unbounded growth
+      const existing = getSeenCriticalIds();
+      const merged = [...new Set([...existing, ...ids])].slice(-500);
+      localStorage.setItem(SEEN_IDS_KEY, JSON.stringify(merged));
+    } catch(e) {}
+  }
+
+  function checkForNewCriticals(recalls) {
+    const criticals = recalls.filter(r => r.isCritical);
+    if (criticals.length === 0) return;
+
+    const seenIds = getSeenCriticalIds();
+    const newCriticals = criticals.filter(r => !seenIds.includes(r.id));
+
+    if (newCriticals.length > 0) {
+      // Mark as seen
+      markCriticalIdsSeen(newCriticals.map(r => r.id));
+
+      // Show in-page toast
+      showToast(newCriticals);
+
+      // Browser notification if enabled
+      if (isNotifEnabled() && Notification.permission === 'granted') {
+        if (newCriticals.length === 1) {
+          const r = newCriticals[0];
+          const advisory = r.doNotDrive ? '⛔ DO NOT DRIVE' : '🅿️ PARK OUTSIDE';
+          new Notification(`${advisory} — ${r.manufacturer}`, {
+            body: `${r.subject}\n${r.affectedStr} units potentially affected`,
+            icon: 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><text y=".9em" font-size="90">🚨</text></svg>',
+            tag: r.id,
+            requireInteraction: true
+          });
+        } else {
+          const doNotDriveCount = newCriticals.filter(r => r.doNotDrive).length;
+          new Notification(`🚨 ${newCriticals.length} New Critical Recalls`, {
+            body: newCriticals.map(r => `${r.manufacturer}: ${r.subject}`).join('\n'),
+            icon: 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><text y=".9em" font-size="90">🚨</text></svg>',
+            tag: 'nhtsa-batch',
+            requireInteraction: true
+          });
+        }
+      }
+    } else {
+      // First load — seed the seen list without alerting
+      markCriticalIdsSeen(criticals.map(r => r.id));
+    }
+  }
+
+  function showToast(newCriticals) {
+    const toast = document.getElementById('toastBanner');
+    const text = document.getElementById('toastText');
+    if (newCriticals.length === 1) {
+      const r = newCriticals[0];
+      text.textContent = `New critical recall: ${r.manufacturer} — ${r.subject}`;
+    } else {
+      text.textContent = `${newCriticals.length} new critical recalls detected`;
+    }
+    toast.classList.add('visible');
+    // Auto-dismiss after 15 seconds
+    setTimeout(() => toast.classList.remove('visible'), 15000);
+  }
+
+  window.dismissToast = function() {
+    document.getElementById('toastBanner').classList.remove('visible');
+  };
+
+  // ── AUTO-REFRESH ──
+  function startAutoRefresh() {
+    // Clear any existing timers
+    if (refreshTimer) clearInterval(refreshTimer);
+    if (barTimer) clearInterval(barTimer);
+
+    lastFetchTime = Date.now();
+
+    // Progress bar
+    barTimer = setInterval(updateRefreshBar, REFRESH_BAR_INTERVAL);
+
+    // Auto-fetch
+    refreshTimer = setInterval(async () => {
+      // Force bypass cache
+      localStorage.removeItem(CACHE_KEY);
+      const days = parseInt(document.getElementById('dateRange').value);
+      try {
+        const raw = await fetchRecalls(days, true);
+        const newRecalls = raw.map(normalizeRecall);
+        // Check for new criticals BEFORE updating the list
+        checkForNewCriticals(newRecalls);
+        allRecalls = newRecalls;
+        populateManufacturerDropdown();
+        applyFilters();
+        lastFetchTime = Date.now();
+        document.getElementById('lastUpdated').textContent =
+          `Updated ${new Date().toLocaleString('en-US', { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' })}`;
+      } catch(e) {
+        console.warn('Auto-refresh failed:', e);
+      }
+    }, REFRESH_INTERVAL);
+  }
+
+  function updateRefreshBar() {
+    const elapsed = Date.now() - lastFetchTime;
+    const pct = Math.min(100, (elapsed / REFRESH_INTERVAL) * 100);
+    document.getElementById('refreshBar').style.width = pct + '%';
+  }
 
   // ── FETCH DATA ──
-  async function fetchRecalls(days) {
+  async function fetchRecalls(days, bypassCache) {
     const since = new Date();
     since.setDate(since.getDate() - days);
     const sinceStr = since.toISOString().split('T')[0];
 
-    // Check cache
-    const cached = getCachedData(days);
-    if (cached) {
-      return cached;
+    // Check cache (unless bypassed)
+    if (!bypassCache) {
+      const cached = getCachedData(days);
+      if (cached) return cached;
     }
 
     const params = new URLSearchParams({
@@ -666,7 +929,7 @@
         days: days,
         data: data
       }));
-    } catch(e) { /* localStorage full, ignore */ }
+    } catch(e) {}
 
     return data;
   }
@@ -792,14 +1055,44 @@
   }
 
   // ── FILTER & RENDER LIST ──
+  // ── POPULATE MANUFACTURER DROPDOWN ──
+  function populateManufacturerDropdown() {
+    const select = document.getElementById('mfgFilter');
+    const mfgs = [...new Set(allRecalls.map(r => r.manufacturer))].sort((a, b) =>
+      a.localeCompare(b, undefined, { sensitivity: 'base' })
+    );
+
+    // Preserve current selection if still valid
+    const prev = select.value;
+    select.innerHTML = '<option value="all">All Manufacturers (' + mfgs.length + ')</option>';
+
+    // Group by first letter for easier scanning
+    mfgs.forEach(m => {
+      const count = allRecalls.filter(r => r.manufacturer === m).length;
+      const opt = document.createElement('option');
+      opt.value = m;
+      opt.textContent = `${m} (${count})`;
+      select.appendChild(opt);
+    });
+
+    // Restore selection
+    if (prev && mfgs.includes(prev)) {
+      select.value = prev;
+      activeMfg = prev;
+    } else {
+      select.value = 'all';
+      activeMfg = 'all';
+    }
+  }
+
+  // ── FILTER & SORT ──
   function applyFilters() {
     const query = document.getElementById('searchInput').value.toLowerCase().trim();
+    const sortMode = document.getElementById('sortBy').value;
 
     filteredRecalls = allRecalls.filter(r => {
-      // Type filter
       if (activeType !== 'all' && r.type !== activeType) return false;
-
-      // Search filter
+      if (activeMfg !== 'all' && r.manufacturer !== activeMfg) return false;
       if (query) {
         const haystack = [r.manufacturer, r.subject, r.component, r.description, r.nhtsaId]
           .join(' ').toLowerCase();
@@ -808,15 +1101,28 @@
       return true;
     });
 
-    // Sort: critical first, then by date
+    // Always float criticals to top, then apply chosen sort within each group
     filteredRecalls.sort((a, b) => {
       if (a.isCritical !== b.isCritical) return a.isCritical ? -1 : 1;
-      return (b.date || 0) - (a.date || 0);
+
+      switch (sortMode) {
+        case 'manufacturer':
+          return a.manufacturer.localeCompare(b.manufacturer, undefined, { sensitivity: 'base' })
+            || (b.date || 0) - (a.date || 0);
+        case 'affected':
+          return (b.affected - a.affected) || (b.date || 0) - (a.date || 0);
+        case 'component':
+          return a.component.localeCompare(b.component, undefined, { sensitivity: 'base' })
+            || (b.date || 0) - (a.date || 0);
+        case 'date':
+        default:
+          return (b.date || 0) - (a.date || 0);
+      }
     });
 
     currentPage = 1;
     renderList();
-    renderStats(allRecalls); // stats always show full dataset
+    renderStats(allRecalls);
     document.getElementById('resultCount').textContent =
       `${filteredRecalls.length} of ${allRecalls.length} recalls`;
   }
@@ -888,9 +1194,18 @@
     try {
       const raw = await fetchRecalls(days);
       allRecalls = raw.map(normalizeRecall);
+
+      // Check for new criticals (seeds seen list on first load, alerts on subsequent)
+      checkForNewCriticals(allRecalls);
+
+      populateManufacturerDropdown();
       applyFilters();
+      lastFetchTime = Date.now();
       document.getElementById('lastUpdated').textContent =
         `Updated ${new Date().toLocaleString('en-US', { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' })}`;
+
+      // Start auto-refresh cycle
+      startAutoRefresh();
     } catch(err) {
       document.getElementById('recallList').innerHTML =
         `<div class="empty-state">Error loading data: ${esc(err.message)}<br>
@@ -902,7 +1217,6 @@
   document.getElementById('searchInput').addEventListener('input', debounce(applyFilters, 250));
 
   document.getElementById('dateRange').addEventListener('change', function() {
-    // Clear cache to force re-fetch with new date range
     localStorage.removeItem(CACHE_KEY);
     document.getElementById('recallList').innerHTML = `
       <div class="loading-state">
@@ -920,6 +1234,15 @@
     applyFilters();
   });
 
+  document.getElementById('mfgFilter').addEventListener('change', function() {
+    activeMfg = this.value;
+    applyFilters();
+  });
+
+  document.getElementById('sortBy').addEventListener('change', function() {
+    applyFilters();
+  });
+
   function debounce(fn, ms) {
     let t;
     return function() {
@@ -929,6 +1252,7 @@
   }
 
   // ── GO ──
+  updateNotifUI();
   init();
 })();
 </script>
