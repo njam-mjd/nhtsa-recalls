@@ -1,0 +1,936 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NHTSA Recall Alert Dashboard</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Libre+Franklin:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #f7f8fa;
+    --surface: #ffffff;
+    --border: #e2e5ea;
+    --text: #1a1d23;
+    --text-secondary: #5a6070;
+    --text-muted: #8b92a0;
+    --accent: #BCD031;
+    --accent-dark: #9ab020;
+    --critical-red: #d94040;
+    --critical-bg: #fef2f2;
+    --critical-border: #fecaca;
+    --warn-orange: #e67e22;
+    --warn-bg: #fffbf0;
+    --warn-border: #fde68a;
+    --vehicle-color: #3b82f6;
+    --equipment-color: #8b5cf6;
+    --tire-color: #f59e0b;
+    --carseat-color: #ef4444;
+    --tag-vehicle: #eff6ff;
+    --tag-equipment: #f5f3ff;
+    --tag-tire: #fffbeb;
+    --tag-carseat: #fef2f2;
+    --shadow-sm: 0 1px 2px rgba(0,0,0,0.04);
+    --shadow-md: 0 2px 8px rgba(0,0,0,0.06);
+    --shadow-lg: 0 4px 16px rgba(0,0,0,0.08);
+    --radius: 10px;
+    --radius-sm: 6px;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'Libre Franklin', system-ui, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* ── HEADER ── */
+  .site-header {
+    background: #1a1d23;
+    color: #fff;
+    padding: 0 24px;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+  .header-inner {
+    max-width: 1280px;
+    margin: 0 auto;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    height: 56px;
+  }
+  .header-brand {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .header-brand svg { height: 22px; }
+  .header-divider {
+    width: 1px;
+    height: 24px;
+    background: rgba(255,255,255,0.2);
+  }
+  .header-title {
+    font-size: 14px;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+    color: var(--accent);
+    text-transform: uppercase;
+  }
+  .header-meta {
+    font-size: 12px;
+    color: rgba(255,255,255,0.5);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .header-meta .dot {
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    background: var(--accent);
+    animation: pulse 2s ease-in-out infinite;
+  }
+  @keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.4; }
+  }
+
+  /* ── HERO STATS ── */
+  .hero {
+    max-width: 1280px;
+    margin: 0 auto;
+    padding: 28px 24px 0;
+  }
+  .hero-row {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+    gap: 14px;
+    margin-bottom: 24px;
+  }
+  .stat-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 18px 20px;
+    box-shadow: var(--shadow-sm);
+    transition: box-shadow 0.2s;
+  }
+  .stat-card:hover { box-shadow: var(--shadow-md); }
+  .stat-card .stat-label {
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--text-muted);
+    margin-bottom: 6px;
+  }
+  .stat-card .stat-value {
+    font-size: 28px;
+    font-weight: 800;
+    line-height: 1.1;
+  }
+  .stat-card .stat-sub {
+    font-size: 12px;
+    color: var(--text-secondary);
+    margin-top: 4px;
+  }
+  .stat-accent { border-left: 3px solid var(--accent); }
+  .stat-critical { border-left: 3px solid var(--critical-red); }
+  .stat-vehicle { border-left: 3px solid var(--vehicle-color); }
+  .stat-equipment { border-left: 3px solid var(--equipment-color); }
+  .stat-tire { border-left: 3px solid var(--tire-color); }
+  .stat-carseat { border-left: 3px solid var(--carseat-color); }
+
+  /* ── CONTROLS ── */
+  .controls {
+    max-width: 1280px;
+    margin: 0 auto;
+    padding: 0 24px 20px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    align-items: center;
+  }
+  .search-box {
+    flex: 1;
+    min-width: 220px;
+    position: relative;
+  }
+  .search-box input {
+    width: 100%;
+    padding: 10px 14px 10px 38px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    font-family: inherit;
+    font-size: 14px;
+    background: var(--surface);
+    outline: none;
+    transition: border-color 0.15s;
+  }
+  .search-box input:focus { border-color: var(--accent-dark); }
+  .search-box svg {
+    position: absolute;
+    left: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--text-muted);
+  }
+
+  .filter-group {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+  }
+  .filter-btn {
+    padding: 8px 14px;
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    background: var(--surface);
+    font-family: inherit;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--text-secondary);
+    cursor: pointer;
+    transition: all 0.15s;
+    white-space: nowrap;
+  }
+  .filter-btn:hover { border-color: var(--accent-dark); color: var(--text); }
+  .filter-btn.active {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: #1a1d23;
+    font-weight: 600;
+  }
+
+  .date-select {
+    padding: 8px 12px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    background: var(--surface);
+    font-family: inherit;
+    font-size: 13px;
+    color: var(--text);
+    cursor: pointer;
+    outline: none;
+  }
+
+  /* ── RECALL LIST ── */
+  .main {
+    max-width: 1280px;
+    margin: 0 auto;
+    padding: 0 24px 60px;
+  }
+  .section-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 14px;
+    padding-bottom: 10px;
+    border-bottom: 2px solid #1a1d23;
+  }
+  .section-header h2 {
+    font-size: 16px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+  }
+  .section-header .count {
+    font-size: 13px;
+    color: var(--text-muted);
+    font-weight: 500;
+  }
+
+  .recall-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 20px 22px;
+    margin-bottom: 10px;
+    box-shadow: var(--shadow-sm);
+    transition: box-shadow 0.2s;
+    cursor: pointer;
+    position: relative;
+    overflow: hidden;
+  }
+  .recall-card:hover { box-shadow: var(--shadow-md); }
+
+  .recall-card.is-critical {
+    border-left: 4px solid var(--critical-red);
+    background: var(--critical-bg);
+  }
+  .recall-card.is-warning {
+    border-left: 4px solid var(--warn-orange);
+    background: var(--warn-bg);
+  }
+  .recall-card.is-new {
+    border-left: 4px solid var(--accent);
+  }
+
+  .recall-top {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 8px;
+  }
+  .recall-headline {
+    font-size: 15px;
+    font-weight: 700;
+    line-height: 1.35;
+    flex: 1;
+  }
+  .recall-badges {
+    display: flex;
+    gap: 6px;
+    flex-shrink: 0;
+  }
+  .badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 3px 8px;
+    border-radius: 4px;
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    white-space: nowrap;
+  }
+  .badge-critical {
+    background: var(--critical-red);
+    color: #fff;
+  }
+  .badge-warning {
+    background: var(--warn-orange);
+    color: #fff;
+  }
+  .badge-new {
+    background: var(--accent);
+    color: #1a1d23;
+  }
+
+  .recall-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    align-items: center;
+    margin-bottom: 10px;
+  }
+  .meta-tag {
+    font-size: 11px;
+    font-weight: 600;
+    padding: 3px 8px;
+    border-radius: 4px;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+  }
+  .meta-tag.type-vehicle { background: var(--tag-vehicle); color: var(--vehicle-color); }
+  .meta-tag.type-equipment { background: var(--tag-equipment); color: var(--equipment-color); }
+  .meta-tag.type-tire { background: var(--tag-tire); color: var(--tire-color); }
+  .meta-tag.type-carseat { background: var(--tag-carseat); color: var(--carseat-color); }
+
+  .meta-date {
+    font-size: 12px;
+    color: var(--text-muted);
+    font-weight: 500;
+  }
+  .meta-affected {
+    font-size: 12px;
+    color: var(--text-secondary);
+    font-weight: 600;
+  }
+  .meta-component {
+    font-size: 11px;
+    color: var(--text-secondary);
+    background: var(--bg);
+    padding: 3px 8px;
+    border-radius: 4px;
+    font-weight: 500;
+  }
+
+  .recall-summary {
+    font-size: 13.5px;
+    color: var(--text-secondary);
+    line-height: 1.55;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+  .recall-card.expanded .recall-summary {
+    -webkit-line-clamp: unset;
+  }
+
+  .recall-details {
+    display: none;
+    margin-top: 14px;
+    padding-top: 14px;
+    border-top: 1px solid var(--border);
+  }
+  .recall-card.expanded .recall-details { display: block; }
+
+  .detail-section {
+    margin-bottom: 12px;
+  }
+  .detail-section:last-child { margin-bottom: 0; }
+  .detail-label {
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--text-muted);
+    margin-bottom: 4px;
+  }
+  .detail-text {
+    font-size: 13.5px;
+    color: var(--text-secondary);
+    line-height: 1.55;
+  }
+  .recall-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--vehicle-color);
+    text-decoration: none;
+    margin-top: 10px;
+  }
+  .recall-link:hover { text-decoration: underline; }
+
+  /* ── LOADING / EMPTY ── */
+  .loading-state {
+    text-align: center;
+    padding: 80px 24px;
+    color: var(--text-muted);
+  }
+  .loading-state .spinner {
+    width: 32px; height: 32px;
+    border: 3px solid var(--border);
+    border-top-color: var(--accent);
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+    margin: 0 auto 16px;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  .empty-state {
+    text-align: center;
+    padding: 60px 24px;
+    color: var(--text-muted);
+    font-size: 14px;
+  }
+
+  /* ── FOOTER ── */
+  .site-footer {
+    max-width: 1280px;
+    margin: 0 auto;
+    padding: 20px 24px 40px;
+    border-top: 1px solid var(--border);
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .footer-left {
+    font-size: 11px;
+    color: var(--text-muted);
+    line-height: 1.6;
+  }
+  .footer-right {
+    font-size: 11px;
+    color: var(--text-muted);
+  }
+  .footer-right a {
+    color: var(--vehicle-color);
+    text-decoration: none;
+  }
+  .footer-right a:hover { text-decoration: underline; }
+
+  /* ── PAGINATION ── */
+  .pagination {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    margin-top: 24px;
+  }
+  .page-btn {
+    padding: 8px 14px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    background: var(--surface);
+    font-family: inherit;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--text-secondary);
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .page-btn:hover:not(:disabled) { border-color: var(--accent-dark); color: var(--text); }
+  .page-btn:disabled { opacity: 0.4; cursor: default; }
+  .page-btn.active {
+    background: #1a1d23;
+    border-color: #1a1d23;
+    color: #fff;
+  }
+  .page-info {
+    font-size: 13px;
+    color: var(--text-muted);
+    padding: 0 8px;
+  }
+
+  /* ── AI DISCLOSURE ── */
+  .ai-disclosure {
+    max-width: 1280px;
+    margin: 0 auto;
+    padding: 0 24px 8px;
+    font-size: 10px;
+    color: var(--text-muted);
+    font-style: italic;
+  }
+
+  /* ── RESPONSIVE ── */
+  @media (max-width: 768px) {
+    .header-meta { display: none; }
+    .hero-row { grid-template-columns: repeat(2, 1fr); }
+    .controls { flex-direction: column; align-items: stretch; }
+    .search-box { min-width: unset; }
+    .filter-group { overflow-x: auto; flex-wrap: nowrap; padding-bottom: 4px; }
+    .recall-top { flex-direction: column; gap: 8px; }
+    .recall-badges { order: -1; }
+    .stat-card .stat-value { font-size: 22px; }
+  }
+  @media (max-width: 480px) {
+    .hero-row { grid-template-columns: 1fr 1fr; gap: 10px; }
+    .stat-card { padding: 14px 16px; }
+    .recall-card { padding: 16px; }
+  }
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<header class="site-header">
+  <div class="header-inner">
+    <div class="header-brand">
+      <!-- NJ.com style mark -->
+      <svg viewBox="0 0 120 22" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <text x="0" y="17" font-family="'Libre Franklin', sans-serif" font-weight="800" font-size="18" fill="#BCD031">NHTSA</text>
+        <text x="68" y="17" font-family="'Libre Franklin', sans-serif" font-weight="400" font-size="18" fill="#ffffff">WATCH</text>
+      </svg>
+      <div class="header-divider"></div>
+      <span class="header-title">Recall Alert Dashboard</span>
+    </div>
+    <div class="header-meta">
+      <span class="dot"></span>
+      <span id="lastUpdated">Loading…</span>
+    </div>
+  </div>
+</header>
+
+<!-- HERO STATS -->
+<section class="hero">
+  <div class="hero-row" id="heroStats">
+    <div class="stat-card stat-accent">
+      <div class="stat-label">Total Recalls</div>
+      <div class="stat-value" id="statTotal">—</div>
+      <div class="stat-sub" id="statRange">Loading…</div>
+    </div>
+    <div class="stat-card stat-critical">
+      <div class="stat-label">🚨 Critical Alerts</div>
+      <div class="stat-value" id="statCritical">—</div>
+      <div class="stat-sub">Do Not Drive / Park Outside</div>
+    </div>
+    <div class="stat-card stat-vehicle">
+      <div class="stat-label">Vehicles</div>
+      <div class="stat-value" id="statVehicle">—</div>
+      <div class="stat-sub">Recalls</div>
+    </div>
+    <div class="stat-card stat-equipment">
+      <div class="stat-label">Equipment</div>
+      <div class="stat-value" id="statEquipment">—</div>
+      <div class="stat-sub">Recalls</div>
+    </div>
+    <div class="stat-card stat-tire">
+      <div class="stat-label">Tires</div>
+      <div class="stat-value" id="statTire">—</div>
+      <div class="stat-sub">Recalls</div>
+    </div>
+    <div class="stat-card stat-carseat">
+      <div class="stat-label">Car Seats</div>
+      <div class="stat-value" id="statCarseat">—</div>
+      <div class="stat-sub">Recalls</div>
+    </div>
+  </div>
+</section>
+
+<!-- CONTROLS -->
+<div class="controls">
+  <div class="search-box">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+    <input type="text" id="searchInput" placeholder="Search manufacturer, component, description…">
+  </div>
+  <div class="filter-group" id="typeFilters">
+    <button class="filter-btn active" data-filter="all">All Types</button>
+    <button class="filter-btn" data-filter="Vehicle">Vehicles</button>
+    <button class="filter-btn" data-filter="Equipment">Equipment</button>
+    <button class="filter-btn" data-filter="Tire">Tires</button>
+    <button class="filter-btn" data-filter="Child Seat">Car Seats</button>
+  </div>
+  <select class="date-select" id="dateRange">
+    <option value="7">Last 7 days</option>
+    <option value="14">Last 14 days</option>
+    <option value="30" selected>Last 30 days</option>
+    <option value="60">Last 60 days</option>
+    <option value="90">Last 90 days</option>
+    <option value="365">Last year</option>
+  </select>
+</div>
+
+<!-- MAIN RECALL LIST -->
+<main class="main">
+  <div class="section-header">
+    <h2>Recent Recalls</h2>
+    <span class="count" id="resultCount"></span>
+  </div>
+  <div id="recallList">
+    <div class="loading-state">
+      <div class="spinner"></div>
+      <div>Fetching latest NHTSA recall data…</div>
+    </div>
+  </div>
+  <div class="pagination" id="pagination"></div>
+</main>
+
+<!-- FOOTER -->
+<div class="ai-disclosure">This dashboard was built with AI assistance. All data sourced directly from NHTSA via data.transportation.gov.</div>
+<footer class="site-footer">
+  <div class="footer-left">
+    Data source: NHTSA Office of Defects Investigation via <a href="https://data.transportation.gov/Automobiles/Recalls-Data/6axg-epim" target="_blank">data.transportation.gov</a><br>
+    Auto-refreshes on page load. Bookmark and check AM + PM for twice-daily monitoring.
+  </div>
+  <div class="footer-right">
+    <a href="https://www.nhtsa.gov/recalls" target="_blank">NHTSA Recalls →</a>
+  </div>
+</footer>
+
+<script>
+(function() {
+  'use strict';
+
+  // ── CONFIG ──
+  const API_BASE = 'https://data.transportation.gov/resource/6axg-epim.json';
+  const PAGE_SIZE = 25;
+  const CACHE_KEY = 'nhtsa_recall_cache';
+  const CACHE_TTL = 6 * 60 * 60 * 1000; // 6 hours — supports twice-daily checks
+
+  let allRecalls = [];
+  let filteredRecalls = [];
+  let currentPage = 1;
+  let activeType = 'all';
+
+  // ── FETCH DATA ──
+  async function fetchRecalls(days) {
+    const since = new Date();
+    since.setDate(since.getDate() - days);
+    const sinceStr = since.toISOString().split('T')[0];
+
+    // Check cache
+    const cached = getCachedData(days);
+    if (cached) {
+      return cached;
+    }
+
+    const params = new URLSearchParams({
+      '$where': `report_received_date >= '${sinceStr}T00:00:00.000'`,
+      '$order': 'report_received_date DESC',
+      '$limit': 5000
+    });
+
+    const url = `${API_BASE}?${params}`;
+    const resp = await fetch(url);
+    if (!resp.ok) throw new Error(`API error: ${resp.status}`);
+    const data = await resp.json();
+
+    // Cache it
+    try {
+      localStorage.setItem(CACHE_KEY, JSON.stringify({
+        ts: Date.now(),
+        days: days,
+        data: data
+      }));
+    } catch(e) { /* localStorage full, ignore */ }
+
+    return data;
+  }
+
+  function getCachedData(days) {
+    try {
+      const raw = localStorage.getItem(CACHE_KEY);
+      if (!raw) return null;
+      const cache = JSON.parse(raw);
+      if (cache.days !== days) return null;
+      if (Date.now() - cache.ts > CACHE_TTL) return null;
+      return cache.data;
+    } catch(e) { return null; }
+  }
+
+  // ── PARSE & NORMALIZE ──
+  function normalizeRecall(r) {
+    const reportDate = r.report_received_date ? new Date(r.report_received_date) : null;
+    const daysAgo = reportDate ? Math.floor((Date.now() - reportDate.getTime()) / 86400000) : 999;
+    const parkOutside = (r.park_outside_advisory || '').toLowerCase() === 'yes';
+    const doNotDrive = (r.do_not_drive_advisory || '').toLowerCase() === 'yes';
+    const isCritical = doNotDrive || parkOutside;
+    const affected = parseInt(r.potentially_affected) || 0;
+
+    return {
+      id: r.nhtsa_id || '',
+      date: reportDate,
+      dateStr: reportDate ? reportDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : 'Unknown',
+      daysAgo,
+      manufacturer: r.manufacturer || 'Unknown',
+      subject: r.subject || 'No subject',
+      component: r.component || '',
+      type: r.recall_type || 'Vehicle',
+      affected,
+      affectedStr: affected ? affected.toLocaleString() : '—',
+      description: r.recall_description || '',
+      consequence: r.consequence_summary || '',
+      corrective: r.corrective_action || '',
+      parkOutside,
+      doNotDrive,
+      isCritical,
+      isNew: daysAgo <= 2,
+      nhtsaId: r.nhtsa_id || '',
+      completionRate: r.completion_rate_blanknot_reported || ''
+    };
+  }
+
+  // ── RENDER STATS ──
+  function renderStats(recalls) {
+    const total = recalls.length;
+    const critical = recalls.filter(r => r.isCritical).length;
+    const vehicles = recalls.filter(r => r.type === 'Vehicle').length;
+    const equipment = recalls.filter(r => r.type === 'Equipment').length;
+    const tires = recalls.filter(r => r.type === 'Tire').length;
+    const carseats = recalls.filter(r => r.type === 'Child Seat').length;
+
+    document.getElementById('statTotal').textContent = total.toLocaleString();
+    document.getElementById('statCritical').textContent = critical;
+    document.getElementById('statVehicle').textContent = vehicles;
+    document.getElementById('statEquipment').textContent = equipment;
+    document.getElementById('statTire').textContent = tires;
+    document.getElementById('statCarseat').textContent = carseats;
+
+    const days = document.getElementById('dateRange').value;
+    document.getElementById('statRange').textContent = `Past ${days} days`;
+  }
+
+  // ── RENDER RECALL CARD ──
+  function renderCard(recall) {
+    const typeClass = {
+      'Vehicle': 'type-vehicle',
+      'Equipment': 'type-equipment',
+      'Tire': 'type-tire',
+      'Child Seat': 'type-carseat'
+    }[recall.type] || 'type-vehicle';
+
+    let cardClass = 'recall-card';
+    if (recall.doNotDrive) cardClass += ' is-critical';
+    else if (recall.parkOutside) cardClass += ' is-warning';
+    else if (recall.isNew) cardClass += ' is-new';
+
+    let badges = '';
+    if (recall.doNotDrive) badges += '<span class="badge badge-critical">⛔ Do Not Drive</span>';
+    if (recall.parkOutside) badges += '<span class="badge badge-warning">🅿️ Park Outside</span>';
+    if (recall.isNew) badges += '<span class="badge badge-new">NEW</span>';
+
+    return `
+      <div class="${cardClass}" onclick="this.classList.toggle('expanded')">
+        <div class="recall-top">
+          <div class="recall-headline">${esc(recall.manufacturer)}: ${esc(recall.subject)}</div>
+          <div class="recall-badges">${badges}</div>
+        </div>
+        <div class="recall-meta">
+          <span class="meta-tag ${typeClass}">${esc(recall.type)}</span>
+          <span class="meta-date">${recall.dateStr}</span>
+          ${recall.component ? `<span class="meta-component">${esc(recall.component)}</span>` : ''}
+          ${recall.affected ? `<span class="meta-affected">${recall.affectedStr} units</span>` : ''}
+        </div>
+        <div class="recall-summary">${esc(recall.description)}</div>
+        <div class="recall-details">
+          ${recall.consequence ? `
+            <div class="detail-section">
+              <div class="detail-label">Consequence</div>
+              <div class="detail-text">${esc(recall.consequence)}</div>
+            </div>` : ''}
+          ${recall.corrective ? `
+            <div class="detail-section">
+              <div class="detail-label">Corrective Action</div>
+              <div class="detail-text">${esc(recall.corrective)}</div>
+            </div>` : ''}
+          ${recall.nhtsaId ? `
+            <a class="recall-link" href="https://www.nhtsa.gov/recalls?nhtsaId=${recall.nhtsaId}" target="_blank">
+              View on NHTSA.gov →
+            </a>` : ''}
+        </div>
+      </div>`;
+  }
+
+  function esc(str) {
+    const d = document.createElement('div');
+    d.textContent = str;
+    return d.innerHTML;
+  }
+
+  // ── FILTER & RENDER LIST ──
+  function applyFilters() {
+    const query = document.getElementById('searchInput').value.toLowerCase().trim();
+
+    filteredRecalls = allRecalls.filter(r => {
+      // Type filter
+      if (activeType !== 'all' && r.type !== activeType) return false;
+
+      // Search filter
+      if (query) {
+        const haystack = [r.manufacturer, r.subject, r.component, r.description, r.nhtsaId]
+          .join(' ').toLowerCase();
+        return haystack.includes(query);
+      }
+      return true;
+    });
+
+    // Sort: critical first, then by date
+    filteredRecalls.sort((a, b) => {
+      if (a.isCritical !== b.isCritical) return a.isCritical ? -1 : 1;
+      return (b.date || 0) - (a.date || 0);
+    });
+
+    currentPage = 1;
+    renderList();
+    renderStats(allRecalls); // stats always show full dataset
+    document.getElementById('resultCount').textContent =
+      `${filteredRecalls.length} of ${allRecalls.length} recalls`;
+  }
+
+  function renderList() {
+    const container = document.getElementById('recallList');
+    const start = (currentPage - 1) * PAGE_SIZE;
+    const pageItems = filteredRecalls.slice(start, start + PAGE_SIZE);
+
+    if (filteredRecalls.length === 0) {
+      container.innerHTML = '<div class="empty-state">No recalls match your filters.</div>';
+      document.getElementById('pagination').innerHTML = '';
+      return;
+    }
+
+    container.innerHTML = pageItems.map(renderCard).join('');
+    renderPagination();
+  }
+
+  function renderPagination() {
+    const totalPages = Math.ceil(filteredRecalls.length / PAGE_SIZE);
+    const pag = document.getElementById('pagination');
+
+    if (totalPages <= 1) {
+      pag.innerHTML = '';
+      return;
+    }
+
+    let html = '';
+    html += `<button class="page-btn" onclick="goPage(${currentPage - 1})" ${currentPage === 1 ? 'disabled' : ''}>← Prev</button>`;
+
+    const range = getPageRange(currentPage, totalPages);
+    for (const p of range) {
+      if (p === '...') {
+        html += '<span class="page-info">…</span>';
+      } else {
+        html += `<button class="page-btn ${p === currentPage ? 'active' : ''}" onclick="goPage(${p})">${p}</button>`;
+      }
+    }
+
+    html += `<button class="page-btn" onclick="goPage(${currentPage + 1})" ${currentPage === totalPages ? 'disabled' : ''}>Next →</button>`;
+    pag.innerHTML = html;
+  }
+
+  function getPageRange(current, total) {
+    if (total <= 7) return Array.from({length: total}, (_, i) => i + 1);
+    const pages = [];
+    pages.push(1);
+    if (current > 3) pages.push('...');
+    for (let i = Math.max(2, current - 1); i <= Math.min(total - 1, current + 1); i++) {
+      pages.push(i);
+    }
+    if (current < total - 2) pages.push('...');
+    pages.push(total);
+    return pages;
+  }
+
+  window.goPage = function(p) {
+    const totalPages = Math.ceil(filteredRecalls.length / PAGE_SIZE);
+    if (p < 1 || p > totalPages) return;
+    currentPage = p;
+    renderList();
+    window.scrollTo({ top: 300, behavior: 'smooth' });
+  };
+
+  // ── INIT ──
+  async function init() {
+    const days = parseInt(document.getElementById('dateRange').value);
+    try {
+      const raw = await fetchRecalls(days);
+      allRecalls = raw.map(normalizeRecall);
+      applyFilters();
+      document.getElementById('lastUpdated').textContent =
+        `Updated ${new Date().toLocaleString('en-US', { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' })}`;
+    } catch(err) {
+      document.getElementById('recallList').innerHTML =
+        `<div class="empty-state">Error loading data: ${esc(err.message)}<br>
+        <button onclick="location.reload()" style="margin-top:12px;padding:8px 16px;border:1px solid var(--border);border-radius:6px;background:var(--surface);cursor:pointer;font-family:inherit;">Retry</button></div>`;
+    }
+  }
+
+  // ── EVENT LISTENERS ──
+  document.getElementById('searchInput').addEventListener('input', debounce(applyFilters, 250));
+
+  document.getElementById('dateRange').addEventListener('change', function() {
+    // Clear cache to force re-fetch with new date range
+    localStorage.removeItem(CACHE_KEY);
+    document.getElementById('recallList').innerHTML = `
+      <div class="loading-state">
+        <div class="spinner"></div>
+        <div>Fetching recalls…</div>
+      </div>`;
+    init();
+  });
+
+  document.getElementById('typeFilters').addEventListener('click', function(e) {
+    if (!e.target.classList.contains('filter-btn')) return;
+    document.querySelectorAll('#typeFilters .filter-btn').forEach(b => b.classList.remove('active'));
+    e.target.classList.add('active');
+    activeType = e.target.dataset.filter;
+    applyFilters();
+  });
+
+  function debounce(fn, ms) {
+    let t;
+    return function() {
+      clearTimeout(t);
+      t = setTimeout(fn, ms);
+    };
+  }
+
+  // ── GO ──
+  init();
+})();
+</script>
+</body>
+</html>
