@@ -3,1258 +3,230 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>NHTSA Recall Alert Dashboard</title>
+<title>Federal Recall Alert Dashboard</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Libre+Franklin:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <style>
-  :root {
-    --bg: #f7f8fa;
-    --surface: #ffffff;
-    --border: #e2e5ea;
-    --text: #1a1d23;
-    --text-secondary: #5a6070;
-    --text-muted: #8b92a0;
-    --accent: #BCD031;
-    --accent-dark: #9ab020;
-    --critical-red: #d94040;
-    --critical-bg: #fef2f2;
-    --critical-border: #fecaca;
-    --warn-orange: #e67e22;
-    --warn-bg: #fffbf0;
-    --warn-border: #fde68a;
-    --vehicle-color: #3b82f6;
-    --equipment-color: #8b5cf6;
-    --tire-color: #f59e0b;
-    --carseat-color: #ef4444;
-    --tag-vehicle: #eff6ff;
-    --tag-equipment: #f5f3ff;
-    --tag-tire: #fffbeb;
-    --tag-carseat: #fef2f2;
-    --shadow-sm: 0 1px 2px rgba(0,0,0,0.04);
-    --shadow-md: 0 2px 8px rgba(0,0,0,0.06);
-    --shadow-lg: 0 4px 16px rgba(0,0,0,0.08);
-    --radius: 10px;
-    --radius-sm: 6px;
-  }
-
-  * { margin: 0; padding: 0; box-sizing: border-box; }
-
-  body {
-    font-family: 'Libre Franklin', system-ui, sans-serif;
-    background: var(--bg);
-    color: var(--text);
-    line-height: 1.5;
-    -webkit-font-smoothing: antialiased;
-  }
-
-  /* ── HEADER ── */
-  .site-header {
-    background: #1a1d23;
-    color: #fff;
-    padding: 0 24px;
-    position: sticky;
-    top: 0;
-    z-index: 100;
-  }
-  .header-inner {
-    max-width: 1280px;
-    margin: 0 auto;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    height: 56px;
-  }
-  .header-brand {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-  }
-  .header-brand svg { height: 22px; }
-  .header-divider {
-    width: 1px;
-    height: 24px;
-    background: rgba(255,255,255,0.2);
-  }
-  .header-title {
-    font-size: 14px;
-    font-weight: 600;
-    letter-spacing: 0.02em;
-    color: var(--accent);
-    text-transform: uppercase;
-  }
-  .header-meta {
-    font-size: 12px;
-    color: rgba(255,255,255,0.5);
-    display: flex;
-    align-items: center;
-    gap: 8px;
-  }
-  .header-meta .dot {
-    width: 6px; height: 6px;
-    border-radius: 50%;
-    background: var(--accent);
-    animation: pulse 2s ease-in-out infinite;
-  }
-  @keyframes pulse {
-    0%, 100% { opacity: 1; }
-    50% { opacity: 0.4; }
-  }
-
-  /* ── HERO STATS ── */
-  .hero {
-    max-width: 1280px;
-    margin: 0 auto;
-    padding: 28px 24px 0;
-  }
-  .hero-row {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
-    gap: 14px;
-    margin-bottom: 24px;
-  }
-  .stat-card {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-    padding: 18px 20px;
-    box-shadow: var(--shadow-sm);
-    transition: box-shadow 0.2s;
-  }
-  .stat-card:hover { box-shadow: var(--shadow-md); }
-  .stat-card .stat-label {
-    font-size: 11px;
-    font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: 0.06em;
-    color: var(--text-muted);
-    margin-bottom: 6px;
-  }
-  .stat-card .stat-value {
-    font-size: 28px;
-    font-weight: 800;
-    line-height: 1.1;
-  }
-  .stat-card .stat-sub {
-    font-size: 12px;
-    color: var(--text-secondary);
-    margin-top: 4px;
-  }
-  .stat-accent { border-left: 3px solid var(--accent); }
-  .stat-critical { border-left: 3px solid var(--critical-red); }
-  .stat-vehicle { border-left: 3px solid var(--vehicle-color); }
-  .stat-equipment { border-left: 3px solid var(--equipment-color); }
-  .stat-tire { border-left: 3px solid var(--tire-color); }
-  .stat-carseat { border-left: 3px solid var(--carseat-color); }
-
-  /* ── CONTROLS ── */
-  .controls {
-    max-width: 1280px;
-    margin: 0 auto;
-    padding: 0 24px 20px;
-    display: flex;
-    flex-wrap: wrap;
-    gap: 10px;
-    align-items: center;
-  }
-  .search-box {
-    flex: 1;
-    min-width: 220px;
-    position: relative;
-  }
-  .search-box input {
-    width: 100%;
-    padding: 10px 14px 10px 38px;
-    border: 1px solid var(--border);
-    border-radius: var(--radius-sm);
-    font-family: inherit;
-    font-size: 14px;
-    background: var(--surface);
-    outline: none;
-    transition: border-color 0.15s;
-  }
-  .search-box input:focus { border-color: var(--accent-dark); }
-  .search-box svg {
-    position: absolute;
-    left: 12px;
-    top: 50%;
-    transform: translateY(-50%);
-    color: var(--text-muted);
-  }
-
-  .filter-group {
-    display: flex;
-    gap: 6px;
-    flex-wrap: wrap;
-  }
-  .filter-btn {
-    padding: 8px 14px;
-    border: 1px solid var(--border);
-    border-radius: 20px;
-    background: var(--surface);
-    font-family: inherit;
-    font-size: 13px;
-    font-weight: 500;
-    color: var(--text-secondary);
-    cursor: pointer;
-    transition: all 0.15s;
-    white-space: nowrap;
-  }
-  .filter-btn:hover { border-color: var(--accent-dark); color: var(--text); }
-  .filter-btn.active {
-    background: var(--accent);
-    border-color: var(--accent);
-    color: #1a1d23;
-    font-weight: 600;
-  }
-
-  .date-select {
-    padding: 8px 12px;
-    border: 1px solid var(--border);
-    border-radius: var(--radius-sm);
-    background: var(--surface);
-    font-family: inherit;
-    font-size: 13px;
-    color: var(--text);
-    cursor: pointer;
-    outline: none;
-  }
-
-  /* ── RECALL LIST ── */
-  .main {
-    max-width: 1280px;
-    margin: 0 auto;
-    padding: 0 24px 60px;
-  }
-  .section-header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    margin-bottom: 14px;
-    padding-bottom: 10px;
-    border-bottom: 2px solid #1a1d23;
-  }
-  .section-header h2 {
-    font-size: 16px;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 0.04em;
-  }
-  .section-header .count {
-    font-size: 13px;
-    color: var(--text-muted);
-    font-weight: 500;
-  }
-
-  .recall-card {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-    padding: 20px 22px;
-    margin-bottom: 10px;
-    box-shadow: var(--shadow-sm);
-    transition: box-shadow 0.2s;
-    cursor: pointer;
-    position: relative;
-    overflow: hidden;
-  }
-  .recall-card:hover { box-shadow: var(--shadow-md); }
-
-  .recall-card.is-critical {
-    border-left: 4px solid var(--critical-red);
-    background: var(--critical-bg);
-  }
-  .recall-card.is-warning {
-    border-left: 4px solid var(--warn-orange);
-    background: var(--warn-bg);
-  }
-  .recall-card.is-new {
-    border-left: 4px solid var(--accent);
-  }
-
-  .recall-top {
-    display: flex;
-    align-items: flex-start;
-    justify-content: space-between;
-    gap: 12px;
-    margin-bottom: 8px;
-  }
-  .recall-headline {
-    font-size: 15px;
-    font-weight: 700;
-    line-height: 1.35;
-    flex: 1;
-  }
-  .recall-badges {
-    display: flex;
-    gap: 6px;
-    flex-shrink: 0;
-  }
-  .badge {
-    display: inline-flex;
-    align-items: center;
-    gap: 4px;
-    padding: 3px 8px;
-    border-radius: 4px;
-    font-size: 10px;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 0.04em;
-    white-space: nowrap;
-  }
-  .badge-critical {
-    background: var(--critical-red);
-    color: #fff;
-  }
-  .badge-warning {
-    background: var(--warn-orange);
-    color: #fff;
-  }
-  .badge-new {
-    background: var(--accent);
-    color: #1a1d23;
-  }
-
-  .recall-meta {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 8px;
-    align-items: center;
-    margin-bottom: 10px;
-  }
-  .meta-tag {
-    font-size: 11px;
-    font-weight: 600;
-    padding: 3px 8px;
-    border-radius: 4px;
-    text-transform: uppercase;
-    letter-spacing: 0.03em;
-  }
-  .meta-tag.type-vehicle { background: var(--tag-vehicle); color: var(--vehicle-color); }
-  .meta-tag.type-equipment { background: var(--tag-equipment); color: var(--equipment-color); }
-  .meta-tag.type-tire { background: var(--tag-tire); color: var(--tire-color); }
-  .meta-tag.type-carseat { background: var(--tag-carseat); color: var(--carseat-color); }
-
-  .meta-date {
-    font-size: 12px;
-    color: var(--text-muted);
-    font-weight: 500;
-  }
-  .meta-affected {
-    font-size: 12px;
-    color: var(--text-secondary);
-    font-weight: 600;
-  }
-  .meta-component {
-    font-size: 11px;
-    color: var(--text-secondary);
-    background: var(--bg);
-    padding: 3px 8px;
-    border-radius: 4px;
-    font-weight: 500;
-  }
-
-  .recall-summary {
-    font-size: 13.5px;
-    color: var(--text-secondary);
-    line-height: 1.55;
-    display: -webkit-box;
-    -webkit-line-clamp: 2;
-    -webkit-box-orient: vertical;
-    overflow: hidden;
-  }
-  .recall-card.expanded .recall-summary {
-    -webkit-line-clamp: unset;
-  }
-
-  .recall-details {
-    display: none;
-    margin-top: 14px;
-    padding-top: 14px;
-    border-top: 1px solid var(--border);
-  }
-  .recall-card.expanded .recall-details { display: block; }
-
-  .detail-section {
-    margin-bottom: 12px;
-  }
-  .detail-section:last-child { margin-bottom: 0; }
-  .detail-label {
-    font-size: 11px;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
-    color: var(--text-muted);
-    margin-bottom: 4px;
-  }
-  .detail-text {
-    font-size: 13.5px;
-    color: var(--text-secondary);
-    line-height: 1.55;
-  }
-  .recall-link {
-    display: inline-flex;
-    align-items: center;
-    gap: 4px;
-    font-size: 13px;
-    font-weight: 600;
-    color: var(--vehicle-color);
-    text-decoration: none;
-    margin-top: 10px;
-  }
-  .recall-link:hover { text-decoration: underline; }
-
-  /* ── LOADING / EMPTY ── */
-  .loading-state {
-    text-align: center;
-    padding: 80px 24px;
-    color: var(--text-muted);
-  }
-  .loading-state .spinner {
-    width: 32px; height: 32px;
-    border: 3px solid var(--border);
-    border-top-color: var(--accent);
-    border-radius: 50%;
-    animation: spin 0.8s linear infinite;
-    margin: 0 auto 16px;
-  }
-  @keyframes spin { to { transform: rotate(360deg); } }
-
-  .empty-state {
-    text-align: center;
-    padding: 60px 24px;
-    color: var(--text-muted);
-    font-size: 14px;
-  }
-
-  /* ── FOOTER ── */
-  .site-footer {
-    max-width: 1280px;
-    margin: 0 auto;
-    padding: 20px 24px 40px;
-    border-top: 1px solid var(--border);
-    display: flex;
-    flex-wrap: wrap;
-    gap: 12px;
-    justify-content: space-between;
-    align-items: center;
-  }
-  .footer-left {
-    font-size: 11px;
-    color: var(--text-muted);
-    line-height: 1.6;
-  }
-  .footer-right {
-    font-size: 11px;
-    color: var(--text-muted);
-  }
-  .footer-right a {
-    color: var(--vehicle-color);
-    text-decoration: none;
-  }
-  .footer-right a:hover { text-decoration: underline; }
-
-  /* ── PAGINATION ── */
-  .pagination {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 6px;
-    margin-top: 24px;
-  }
-  .page-btn {
-    padding: 8px 14px;
-    border: 1px solid var(--border);
-    border-radius: var(--radius-sm);
-    background: var(--surface);
-    font-family: inherit;
-    font-size: 13px;
-    font-weight: 500;
-    color: var(--text-secondary);
-    cursor: pointer;
-    transition: all 0.15s;
-  }
-  .page-btn:hover:not(:disabled) { border-color: var(--accent-dark); color: var(--text); }
-  .page-btn:disabled { opacity: 0.4; cursor: default; }
-  .page-btn.active {
-    background: #1a1d23;
-    border-color: #1a1d23;
-    color: #fff;
-  }
-  .page-info {
-    font-size: 13px;
-    color: var(--text-muted);
-    padding: 0 8px;
-  }
-
-  /* ── AI DISCLOSURE ── */
-  .ai-disclosure {
-    max-width: 1280px;
-    margin: 0 auto;
-    padding: 0 24px 8px;
-    font-size: 10px;
-    color: var(--text-muted);
-    font-style: italic;
-  }
-
-  /* ── NOTIFICATION BELL ── */
-  .notif-btn {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    padding: 5px 12px;
-    border: 1px solid rgba(255,255,255,0.15);
-    border-radius: 20px;
-    background: transparent;
-    color: rgba(255,255,255,0.6);
-    font-family: inherit;
-    font-size: 11px;
-    font-weight: 600;
-    cursor: pointer;
-    transition: all 0.2s;
-    white-space: nowrap;
-  }
-  .notif-btn:hover { border-color: rgba(255,255,255,0.3); color: #fff; }
-  .notif-btn.enabled {
-    border-color: var(--accent);
-    color: var(--accent);
-  }
-  .notif-btn svg { width: 14px; height: 14px; }
-
-  /* ── TOAST BANNER ── */
-  .toast-banner {
-    position: fixed;
-    top: 64px;
-    left: 50%;
-    transform: translateX(-50%) translateY(-120%);
-    background: var(--critical-red);
-    color: #fff;
-    padding: 12px 20px;
-    border-radius: var(--radius);
-    box-shadow: 0 8px 30px rgba(0,0,0,0.2);
-    font-size: 13px;
-    font-weight: 600;
-    z-index: 200;
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
-    max-width: 500px;
-  }
-  .toast-banner.visible {
-    transform: translateX(-50%) translateY(0);
-  }
-  .toast-banner .toast-close {
-    background: none;
-    border: none;
-    color: #fff;
-    font-size: 18px;
-    cursor: pointer;
-    padding: 0 0 0 8px;
-    opacity: 0.7;
-  }
-  .toast-banner .toast-close:hover { opacity: 1; }
-
-  /* ── AUTO-REFRESH INDICATOR ── */
-  .refresh-bar {
-    height: 2px;
-    background: var(--accent);
-    position: fixed;
-    top: 56px;
-    left: 0;
-    width: 0%;
-    z-index: 101;
-    transition: width 0.5s ease;
-  }
-
-  /* ── RESPONSIVE ── */
-  @media (max-width: 768px) {
-    .header-meta { display: none; }
-    .hero-row { grid-template-columns: repeat(2, 1fr); }
-    .controls { flex-direction: column; align-items: stretch; }
-    .search-box { min-width: unset; }
-    .filter-group { overflow-x: auto; flex-wrap: nowrap; padding-bottom: 4px; }
-    .recall-top { flex-direction: column; gap: 8px; }
-    .recall-badges { order: -1; }
-    .stat-card .stat-value { font-size: 22px; }
-  }
-  @media (max-width: 480px) {
-    .hero-row { grid-template-columns: 1fr 1fr; gap: 10px; }
-    .stat-card { padding: 14px 16px; }
-    .recall-card { padding: 16px; }
-  }
+:root{--bg:#f7f8fa;--surface:#fff;--border:#e2e5ea;--text:#1a1d23;--text-secondary:#5a6070;--text-muted:#8b92a0;--accent:#BCD031;--accent-dark:#9ab020;--critical-red:#d94040;--critical-bg:#fef2f2;--warn-orange:#e67e22;--warn-bg:#fffbf0;--nhtsa:#3b82f6;--cpsc:#8b5cf6;--fda:#059669;--usda:#d97706;--shadow-sm:0 1px 2px rgba(0,0,0,.04);--shadow-md:0 2px 8px rgba(0,0,0,.06);--radius:10px;--radius-sm:6px}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Libre Franklin',system-ui,sans-serif;background:var(--bg);color:var(--text);line-height:1.5;-webkit-font-smoothing:antialiased}
+.site-header{background:#1a1d23;color:#fff;padding:0 24px;position:sticky;top:0;z-index:100}
+.header-inner{max-width:1320px;margin:0 auto;display:flex;align-items:center;justify-content:space-between;height:56px}
+.header-brand{display:flex;align-items:center;gap:12px}
+.header-divider{width:1px;height:24px;background:rgba(255,255,255,.2)}
+.header-title{font-size:14px;font-weight:600;letter-spacing:.02em;color:var(--accent);text-transform:uppercase}
+.header-right{display:flex;align-items:center;gap:14px}
+.notif-btn{display:flex;align-items:center;gap:6px;padding:5px 12px;border:1px solid rgba(255,255,255,.15);border-radius:20px;background:0 0;color:rgba(255,255,255,.6);font-family:inherit;font-size:11px;font-weight:600;cursor:pointer;transition:all .2s;white-space:nowrap}
+.notif-btn:hover{border-color:rgba(255,255,255,.3);color:#fff}
+.notif-btn.enabled{border-color:var(--accent);color:var(--accent)}
+.notif-btn svg{width:14px;height:14px}
+.header-meta{font-size:12px;color:rgba(255,255,255,.5);display:flex;align-items:center;gap:8px}
+.header-meta .dot{width:6px;height:6px;border-radius:50%;background:var(--accent);animation:pulse 2s ease-in-out infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+.tabs-bar{background:#1a1d23;border-top:1px solid rgba(255,255,255,.08);padding:0 24px;position:sticky;top:56px;z-index:99}
+.tabs-inner{max-width:1320px;margin:0 auto;display:flex;gap:0;overflow-x:auto}
+.tab-btn{padding:12px 22px;border:none;background:0 0;font-family:inherit;font-size:13px;font-weight:600;color:rgba(255,255,255,.45);cursor:pointer;border-bottom:3px solid transparent;transition:all .15s;white-space:nowrap;display:flex;align-items:center;gap:8px}
+.tab-btn:hover{color:rgba(255,255,255,.75)}
+.tab-btn.active{color:#fff}
+.tab-btn[data-tab=nhtsa].active{border-bottom-color:var(--nhtsa)}
+.tab-btn[data-tab=cpsc].active{border-bottom-color:var(--cpsc)}
+.tab-btn[data-tab=fda].active{border-bottom-color:var(--fda)}
+.tab-btn[data-tab=usda].active{border-bottom-color:var(--usda)}
+.tab-count{font-size:10px;font-weight:700;padding:2px 7px;border-radius:10px;background:rgba(255,255,255,.1);color:rgba(255,255,255,.5)}
+.tab-btn.active .tab-count{background:rgba(255,255,255,.15);color:#fff}
+.tab-panel{display:none}.tab-panel.active{display:block}
+.hero{max-width:1320px;margin:0 auto;padding:24px 24px 0}
+.hero-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin-bottom:20px}
+.stat-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:16px 18px;box-shadow:var(--shadow-sm)}
+.stat-card .stat-label{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--text-muted);margin-bottom:4px}
+.stat-card .stat-value{font-size:26px;font-weight:800;line-height:1.1}
+.stat-card .stat-sub{font-size:11px;color:var(--text-secondary);margin-top:3px}
+.controls{max-width:1320px;margin:0 auto;padding:0 24px 16px;display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.search-box{flex:1;min-width:200px;position:relative}
+.search-box input{width:100%;padding:9px 14px 9px 36px;border:1px solid var(--border);border-radius:var(--radius-sm);font-family:inherit;font-size:13px;background:var(--surface);outline:none;transition:border-color .15s}
+.search-box input:focus{border-color:var(--accent-dark)}
+.search-box svg{position:absolute;left:11px;top:50%;transform:translateY(-50%);color:var(--text-muted)}
+.ctrl-select{padding:8px 12px;border:1px solid var(--border);border-radius:var(--radius-sm);background:var(--surface);font-family:inherit;font-size:12px;color:var(--text);cursor:pointer;outline:none}
+.filter-pills{display:flex;gap:5px;flex-wrap:wrap}
+.pill{padding:7px 13px;border:1px solid var(--border);border-radius:20px;background:var(--surface);font-family:inherit;font-size:12px;font-weight:500;color:var(--text-secondary);cursor:pointer;transition:all .15s;white-space:nowrap}
+.pill:hover{border-color:var(--accent-dark);color:var(--text)}
+.pill.active{background:var(--accent);border-color:var(--accent);color:#1a1d23;font-weight:600}
+.main{max-width:1320px;margin:0 auto;padding:0 24px 40px}
+.section-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;padding-bottom:10px;border-bottom:2px solid #1a1d23}
+.section-header h2{font-size:15px;font-weight:700;text-transform:uppercase;letter-spacing:.04em}
+.section-header .count{font-size:12px;color:var(--text-muted);font-weight:500}
+.recall-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:18px 20px;margin-bottom:8px;box-shadow:var(--shadow-sm);transition:box-shadow .2s;cursor:pointer;overflow:hidden}
+.recall-card:hover{box-shadow:var(--shadow-md)}
+.recall-card.is-critical{border-left:4px solid var(--critical-red);background:var(--critical-bg)}
+.recall-card.is-warning{border-left:4px solid var(--warn-orange);background:var(--warn-bg)}
+.recall-card.is-new{border-left:4px solid var(--accent)}
+.recall-top{display:flex;align-items:flex-start;justify-content:space-between;gap:10px;margin-bottom:6px}
+.recall-headline{font-size:14px;font-weight:700;line-height:1.35;flex:1}
+.recall-badges{display:flex;gap:5px;flex-shrink:0}
+.badge{display:inline-flex;align-items:center;gap:3px;padding:2px 7px;border-radius:4px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.04em;white-space:nowrap}
+.badge-critical{background:var(--critical-red);color:#fff}
+.badge-warning{background:var(--warn-orange);color:#fff}
+.badge-new{background:var(--accent);color:#1a1d23}
+.badge-class1{background:var(--critical-red);color:#fff}
+.badge-class2{background:var(--warn-orange);color:#fff}
+.badge-class3{background:#6b7280;color:#fff}
+.recall-meta{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin-bottom:8px}
+.meta-tag{font-size:10px;font-weight:600;padding:2px 7px;border-radius:4px;text-transform:uppercase;letter-spacing:.03em}
+.tag-nhtsa{background:#eff6ff;color:var(--nhtsa)}.tag-cpsc{background:#f5f3ff;color:var(--cpsc)}.tag-fda{background:#ecfdf5;color:var(--fda)}.tag-usda{background:#fffbeb;color:var(--usda)}
+.meta-date{font-size:11px;color:var(--text-muted);font-weight:500}
+.meta-detail{font-size:10px;color:var(--text-secondary);background:var(--bg);padding:2px 7px;border-radius:4px;font-weight:500}
+.recall-summary{font-size:13px;color:var(--text-secondary);line-height:1.55;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.recall-card.expanded .recall-summary{-webkit-line-clamp:unset}
+.recall-details{display:none;margin-top:12px;padding-top:12px;border-top:1px solid var(--border)}
+.recall-card.expanded .recall-details{display:block}
+.detail-section{margin-bottom:10px}.detail-section:last-child{margin-bottom:0}
+.detail-label{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--text-muted);margin-bottom:3px}
+.detail-text{font-size:13px;color:var(--text-secondary);line-height:1.55}
+.recall-link{display:inline-flex;align-items:center;gap:4px;font-size:12px;font-weight:600;color:var(--nhtsa);text-decoration:none;margin-top:8px}
+.recall-link:hover{text-decoration:underline}
+.loading-state{text-align:center;padding:60px 24px;color:var(--text-muted)}
+.loading-state .spinner{width:28px;height:28px;border:3px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:spin .8s linear infinite;margin:0 auto 14px}
+@keyframes spin{to{transform:rotate(360deg)}}
+.empty-state{text-align:center;padding:50px 24px;color:var(--text-muted);font-size:13px}
+.pagination{display:flex;align-items:center;justify-content:center;gap:5px;margin-top:20px}
+.page-btn{padding:7px 13px;border:1px solid var(--border);border-radius:var(--radius-sm);background:var(--surface);font-family:inherit;font-size:12px;font-weight:500;color:var(--text-secondary);cursor:pointer;transition:all .15s}
+.page-btn:hover:not(:disabled){border-color:var(--accent-dark);color:var(--text)}
+.page-btn:disabled{opacity:.4;cursor:default}
+.page-btn.active{background:#1a1d23;border-color:#1a1d23;color:#fff}
+.page-info{font-size:12px;color:var(--text-muted);padding:0 6px}
+.toast-banner{position:fixed;top:120px;left:50%;transform:translateX(-50%) translateY(-140%);background:var(--critical-red);color:#fff;padding:12px 18px;border-radius:var(--radius);box-shadow:0 8px 30px rgba(0,0,0,.2);font-size:13px;font-weight:600;z-index:200;display:flex;align-items:center;gap:10px;transition:transform .4s cubic-bezier(.16,1,.3,1);max-width:500px}
+.toast-banner.visible{transform:translateX(-50%) translateY(0)}
+.toast-close{background:none;border:none;color:#fff;font-size:18px;cursor:pointer;padding:0 0 0 8px;opacity:.7}.toast-close:hover{opacity:1}
+.site-footer{max-width:1320px;margin:0 auto;padding:16px 24px 36px;border-top:1px solid var(--border);display:flex;flex-wrap:wrap;gap:10px;justify-content:space-between}
+.footer-left{font-size:10px;color:var(--text-muted);line-height:1.7}
+.footer-left a{color:var(--nhtsa);text-decoration:none}.footer-left a:hover{text-decoration:underline}
+.ai-disclosure{max-width:1320px;margin:0 auto;padding:0 24px 6px;font-size:10px;color:var(--text-muted);font-style:italic}
+@media(max-width:768px){.header-meta{display:none}.hero-row{grid-template-columns:repeat(2,1fr)}.controls{flex-direction:column;align-items:stretch}.search-box{min-width:unset}.filter-pills{overflow-x:auto;flex-wrap:nowrap;padding-bottom:4px}.recall-top{flex-direction:column;gap:6px}.recall-badges{order:-1}.stat-card .stat-value{font-size:22px}.tab-btn{padding:10px 14px;font-size:12px}}
 </style>
 </head>
 <body>
+<header class="site-header"><div class="header-inner">
+<div class="header-brand">
+<svg viewBox="0 0 140 22" fill="none" xmlns="http://www.w3.org/2000/svg"><text x="0" y="17" font-family="'Libre Franklin',sans-serif" font-weight="800" font-size="18" fill="#BCD031">RECALL</text><text x="78" y="17" font-family="'Libre Franklin',sans-serif" font-weight="400" font-size="18" fill="#fff">WATCH</text></svg>
+<div class="header-divider"></div><span class="header-title">Federal Agency Dashboard</span></div>
+<div class="header-right">
+<button class="notif-btn" id="notifBtn" onclick="App.toggleNotif()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg><span id="notifLabel">Alerts Off</span></button>
+<div class="header-meta"><span class="dot"></span><span id="lastUpdated">Loading…</span></div>
+</div></div></header>
 
-<!-- HEADER -->
-<header class="site-header">
-  <div class="header-inner">
-    <div class="header-brand">
-      <!-- NJ.com style mark -->
-      <svg viewBox="0 0 120 22" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <text x="0" y="17" font-family="'Libre Franklin', sans-serif" font-weight="800" font-size="18" fill="#BCD031">NHTSA</text>
-        <text x="68" y="17" font-family="'Libre Franklin', sans-serif" font-weight="400" font-size="18" fill="#ffffff">WATCH</text>
-      </svg>
-      <div class="header-divider"></div>
-      <span class="header-title">Recall Alert Dashboard</span>
-    </div>
-    <div class="header-meta">
-      <button class="notif-btn" id="notifBtn" onclick="toggleNotifications()" title="Enable browser notifications for critical recalls">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
-        <span id="notifLabel">Alerts Off</span>
-      </button>
-      <span class="dot"></span>
-      <span id="lastUpdated">Loading…</span>
-    </div>
-  </div>
-</header>
+<nav class="tabs-bar"><div class="tabs-inner" id="tabsBar">
+<button class="tab-btn active" data-tab="nhtsa">🚗 NHTSA <span class="tab-count" id="countNhtsa">—</span></button>
+<button class="tab-btn" data-tab="cpsc">🏠 CPSC <span class="tab-count" id="countCpsc">—</span></button>
+<button class="tab-btn" data-tab="fda">💊 FDA <span class="tab-count" id="countFda">—</span></button>
+<button class="tab-btn" data-tab="usda">🥩 USDA <span class="tab-count" id="countUsda">—</span></button>
+</div></nav>
 
-<!-- TOAST BANNER FOR NEW CRITICAL RECALLS -->
-<div class="toast-banner" id="toastBanner">
-  <span>⚠️</span>
-  <span id="toastText"></span>
-  <button class="toast-close" onclick="dismissToast()">×</button>
-</div>
+<div class="toast-banner" id="toastBanner"><span>⚠️</span><span id="toastText"></span><button class="toast-close" onclick="App.dismissToast()">×</button></div>
 
-<!-- AUTO-REFRESH PROGRESS BAR -->
-<div class="refresh-bar" id="refreshBar"></div>
+<div class="tab-panel active" id="panel-nhtsa">
+<section class="hero"><div class="hero-row" id="nhtsa-stats"></div></section>
+<div class="controls" id="nhtsa-controls"></div>
+<main class="main"><div class="section-header"><h2>NHTSA Vehicle &amp; Equipment Recalls</h2><span class="count" id="nhtsa-result-count"></span></div>
+<div id="nhtsa-list"><div class="loading-state"><div class="spinner"></div><div>Fetching NHTSA data…</div></div></div>
+<div class="pagination" id="nhtsa-pagination"></div></main></div>
 
-<!-- HERO STATS -->
-<section class="hero">
-  <div class="hero-row" id="heroStats">
-    <div class="stat-card stat-accent">
-      <div class="stat-label">Total Recalls</div>
-      <div class="stat-value" id="statTotal">—</div>
-      <div class="stat-sub" id="statRange">Loading…</div>
-    </div>
-    <div class="stat-card stat-critical">
-      <div class="stat-label">🚨 Critical Alerts</div>
-      <div class="stat-value" id="statCritical">—</div>
-      <div class="stat-sub">Do Not Drive / Park Outside</div>
-    </div>
-    <div class="stat-card stat-vehicle">
-      <div class="stat-label">Vehicles</div>
-      <div class="stat-value" id="statVehicle">—</div>
-      <div class="stat-sub">Recalls</div>
-    </div>
-    <div class="stat-card stat-equipment">
-      <div class="stat-label">Equipment</div>
-      <div class="stat-value" id="statEquipment">—</div>
-      <div class="stat-sub">Recalls</div>
-    </div>
-    <div class="stat-card stat-tire">
-      <div class="stat-label">Tires</div>
-      <div class="stat-value" id="statTire">—</div>
-      <div class="stat-sub">Recalls</div>
-    </div>
-    <div class="stat-card stat-carseat">
-      <div class="stat-label">Car Seats</div>
-      <div class="stat-value" id="statCarseat">—</div>
-      <div class="stat-sub">Recalls</div>
-    </div>
-  </div>
-</section>
+<div class="tab-panel" id="panel-cpsc">
+<section class="hero"><div class="hero-row" id="cpsc-stats"></div></section>
+<div class="controls" id="cpsc-controls"></div>
+<main class="main"><div class="section-header"><h2>CPSC Consumer Product Recalls</h2><span class="count" id="cpsc-result-count"></span></div>
+<div id="cpsc-list"><div class="loading-state"><div class="spinner"></div><div>Fetching CPSC data…</div></div></div>
+<div class="pagination" id="cpsc-pagination"></div></main></div>
 
-<!-- CONTROLS -->
-<div class="controls">
-  <div class="search-box">
-    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-    <input type="text" id="searchInput" placeholder="Search manufacturer, component, description…">
-  </div>
-  <select class="date-select" id="mfgFilter">
-    <option value="all">All Manufacturers</option>
-  </select>
-  <div class="filter-group" id="typeFilters">
-    <button class="filter-btn active" data-filter="all">All Types</button>
-    <button class="filter-btn" data-filter="Vehicle">Vehicles</button>
-    <button class="filter-btn" data-filter="Equipment">Equipment</button>
-    <button class="filter-btn" data-filter="Tire">Tires</button>
-    <button class="filter-btn" data-filter="Child Seat">Car Seats</button>
-  </div>
-  <select class="date-select" id="sortBy">
-    <option value="date">Sort: Newest First</option>
-    <option value="manufacturer">Sort: Manufacturer A–Z</option>
-    <option value="affected">Sort: Most Units</option>
-    <option value="component">Sort: Component A–Z</option>
-  </select>
-  <select class="date-select" id="dateRange">
-    <option value="7">Last 7 days</option>
-    <option value="14">Last 14 days</option>
-    <option value="30" selected>Last 30 days</option>
-    <option value="60">Last 60 days</option>
-    <option value="90">Last 90 days</option>
-    <option value="365">Last year</option>
-  </select>
-</div>
+<div class="tab-panel" id="panel-fda">
+<section class="hero"><div class="hero-row" id="fda-stats"></div></section>
+<div class="controls" id="fda-controls"></div>
+<main class="main"><div class="section-header"><h2>FDA Food, Drug &amp; Device Recalls</h2><span class="count" id="fda-result-count"></span></div>
+<div id="fda-list"><div class="loading-state"><div class="spinner"></div><div>Fetching FDA data…</div></div></div>
+<div class="pagination" id="fda-pagination"></div></main></div>
 
-<!-- MAIN RECALL LIST -->
-<main class="main">
-  <div class="section-header">
-    <h2>Recent Recalls</h2>
-    <span class="count" id="resultCount"></span>
-  </div>
-  <div id="recallList">
-    <div class="loading-state">
-      <div class="spinner"></div>
-      <div>Fetching latest NHTSA recall data…</div>
-    </div>
-  </div>
-  <div class="pagination" id="pagination"></div>
-</main>
+<div class="tab-panel" id="panel-usda">
+<section class="hero"><div class="hero-row" id="usda-stats"></div></section>
+<div class="controls" id="usda-controls"></div>
+<main class="main"><div class="section-header"><h2>USDA/FSIS Meat &amp; Poultry Recalls</h2><span class="count" id="usda-result-count"></span></div>
+<div id="usda-list"><div class="loading-state"><div class="spinner"></div><div>Fetching USDA data…</div></div></div>
+<div class="pagination" id="usda-pagination"></div></main></div>
 
-<!-- FOOTER -->
-<div class="ai-disclosure">This dashboard was built with AI assistance. All data sourced directly from NHTSA via data.transportation.gov.</div>
-<footer class="site-footer">
-  <div class="footer-left">
-    Data source: NHTSA Office of Defects Investigation via <a href="https://data.transportation.gov/Automobiles/Recalls-Data/6axg-epim" target="_blank">data.transportation.gov</a><br>
-    Auto-refreshes every 6 hours while tab is open. Enable alerts for browser notifications on critical recalls.
-  </div>
-  <div class="footer-right">
-    <a href="https://www.nhtsa.gov/recalls" target="_blank">NHTSA Recalls →</a>
-  </div>
-</footer>
+<div class="ai-disclosure">This dashboard was built with AI assistance. All data sourced directly from federal agency APIs.</div>
+<footer class="site-footer"><div class="footer-left">
+Sources: <a href="https://data.transportation.gov/Automobiles/Recalls-Data/6axg-epim" target="_blank">NHTSA/DOT</a> · <a href="https://www.cpsc.gov/Recalls/CPSC-Recalls-Application-Program-Interface-API-Information" target="_blank">CPSC</a> · <a href="https://open.fda.gov/apis/" target="_blank">openFDA</a> · <a href="https://www.fsis.usda.gov/science-data/developer-resources/recall-api" target="_blank">USDA/FSIS</a><br>
+Auto-refreshes every 6 hours. Enable alerts for browser notifications on critical recalls.</div></footer>
 
 <script>
-(function() {
-  'use strict';
-
-  // ── CONFIG ──
-  const API_BASE = 'https://data.transportation.gov/resource/6axg-epim.json';
-  const PAGE_SIZE = 25;
-  const CACHE_KEY = 'nhtsa_recall_cache';
-  const SEEN_IDS_KEY = 'nhtsa_seen_critical_ids';
-  const NOTIF_PREF_KEY = 'nhtsa_notif_enabled';
-  const CACHE_TTL = 6 * 60 * 60 * 1000; // 6 hours
-  const REFRESH_INTERVAL = 6 * 60 * 60 * 1000; // 6 hours auto-poll
-  const REFRESH_BAR_INTERVAL = 60 * 1000; // update progress bar every minute
-
-  let allRecalls = [];
-  let filteredRecalls = [];
-  let currentPage = 1;
-  let activeType = 'all';
-  let activeMfg = 'all';
-  let refreshTimer = null;
-  let barTimer = null;
-  let lastFetchTime = Date.now();
-
-  // ── NOTIFICATIONS ──
-  function isNotifEnabled() {
-    return localStorage.getItem(NOTIF_PREF_KEY) === 'true';
-  }
-
-  function updateNotifUI() {
-    const btn = document.getElementById('notifBtn');
-    const label = document.getElementById('notifLabel');
-    if (isNotifEnabled() && Notification.permission === 'granted') {
-      btn.classList.add('enabled');
-      label.textContent = 'Alerts On';
-    } else {
-      btn.classList.remove('enabled');
-      label.textContent = 'Alerts Off';
-    }
-  }
-
-  window.toggleNotifications = async function() {
-    if (!('Notification' in window)) {
-      alert('Your browser does not support notifications.');
-      return;
-    }
-
-    if (isNotifEnabled()) {
-      // Turn off
-      localStorage.setItem(NOTIF_PREF_KEY, 'false');
-      updateNotifUI();
-      return;
-    }
-
-    // Request permission
-    const perm = await Notification.requestPermission();
-    if (perm === 'granted') {
-      localStorage.setItem(NOTIF_PREF_KEY, 'true');
-      updateNotifUI();
-      // Send a test notification
-      new Notification('NHTSA Watch — Alerts Enabled', {
-        body: 'You\'ll be notified when new Do Not Drive or Park Outside recalls are posted.',
-        icon: 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><text y=".9em" font-size="90">🚨</text></svg>'
-      });
-    } else {
-      localStorage.setItem(NOTIF_PREF_KEY, 'false');
-      updateNotifUI();
-      if (perm === 'denied') {
-        alert('Notifications are blocked by your browser. Check your browser settings to allow them for this site.');
-      }
-    }
-  };
-
-  function getSeenCriticalIds() {
-    try {
-      return JSON.parse(localStorage.getItem(SEEN_IDS_KEY) || '[]');
-    } catch(e) { return []; }
-  }
-
-  function markCriticalIdsSeen(ids) {
-    try {
-      // Keep last 500 IDs to prevent unbounded growth
-      const existing = getSeenCriticalIds();
-      const merged = [...new Set([...existing, ...ids])].slice(-500);
-      localStorage.setItem(SEEN_IDS_KEY, JSON.stringify(merged));
-    } catch(e) {}
-  }
-
-  function checkForNewCriticals(recalls) {
-    const criticals = recalls.filter(r => r.isCritical);
-    if (criticals.length === 0) return;
-
-    const seenIds = getSeenCriticalIds();
-    const newCriticals = criticals.filter(r => !seenIds.includes(r.id));
-
-    if (newCriticals.length > 0) {
-      // Mark as seen
-      markCriticalIdsSeen(newCriticals.map(r => r.id));
-
-      // Show in-page toast
-      showToast(newCriticals);
-
-      // Browser notification if enabled
-      if (isNotifEnabled() && Notification.permission === 'granted') {
-        if (newCriticals.length === 1) {
-          const r = newCriticals[0];
-          const advisory = r.doNotDrive ? '⛔ DO NOT DRIVE' : '🅿️ PARK OUTSIDE';
-          new Notification(`${advisory} — ${r.manufacturer}`, {
-            body: `${r.subject}\n${r.affectedStr} units potentially affected`,
-            icon: 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><text y=".9em" font-size="90">🚨</text></svg>',
-            tag: r.id,
-            requireInteraction: true
-          });
-        } else {
-          const doNotDriveCount = newCriticals.filter(r => r.doNotDrive).length;
-          new Notification(`🚨 ${newCriticals.length} New Critical Recalls`, {
-            body: newCriticals.map(r => `${r.manufacturer}: ${r.subject}`).join('\n'),
-            icon: 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><text y=".9em" font-size="90">🚨</text></svg>',
-            tag: 'nhtsa-batch',
-            requireInteraction: true
-          });
-        }
-      }
-    } else {
-      // First load — seed the seen list without alerting
-      markCriticalIdsSeen(criticals.map(r => r.id));
-    }
-  }
-
-  function showToast(newCriticals) {
-    const toast = document.getElementById('toastBanner');
-    const text = document.getElementById('toastText');
-    if (newCriticals.length === 1) {
-      const r = newCriticals[0];
-      text.textContent = `New critical recall: ${r.manufacturer} — ${r.subject}`;
-    } else {
-      text.textContent = `${newCriticals.length} new critical recalls detected`;
-    }
-    toast.classList.add('visible');
-    // Auto-dismiss after 15 seconds
-    setTimeout(() => toast.classList.remove('visible'), 15000);
-  }
-
-  window.dismissToast = function() {
-    document.getElementById('toastBanner').classList.remove('visible');
-  };
-
-  // ── AUTO-REFRESH ──
-  function startAutoRefresh() {
-    // Clear any existing timers
-    if (refreshTimer) clearInterval(refreshTimer);
-    if (barTimer) clearInterval(barTimer);
-
-    lastFetchTime = Date.now();
-
-    // Progress bar
-    barTimer = setInterval(updateRefreshBar, REFRESH_BAR_INTERVAL);
-
-    // Auto-fetch
-    refreshTimer = setInterval(async () => {
-      // Force bypass cache
-      localStorage.removeItem(CACHE_KEY);
-      const days = parseInt(document.getElementById('dateRange').value);
-      try {
-        const raw = await fetchRecalls(days, true);
-        const newRecalls = raw.map(normalizeRecall);
-        // Check for new criticals BEFORE updating the list
-        checkForNewCriticals(newRecalls);
-        allRecalls = newRecalls;
-        populateManufacturerDropdown();
-        applyFilters();
-        lastFetchTime = Date.now();
-        document.getElementById('lastUpdated').textContent =
-          `Updated ${new Date().toLocaleString('en-US', { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' })}`;
-      } catch(e) {
-        console.warn('Auto-refresh failed:', e);
-      }
-    }, REFRESH_INTERVAL);
-  }
-
-  function updateRefreshBar() {
-    const elapsed = Date.now() - lastFetchTime;
-    const pct = Math.min(100, (elapsed / REFRESH_INTERVAL) * 100);
-    document.getElementById('refreshBar').style.width = pct + '%';
-  }
-
-  // ── FETCH DATA ──
-  async function fetchRecalls(days, bypassCache) {
-    const since = new Date();
-    since.setDate(since.getDate() - days);
-    const sinceStr = since.toISOString().split('T')[0];
-
-    // Check cache (unless bypassed)
-    if (!bypassCache) {
-      const cached = getCachedData(days);
-      if (cached) return cached;
-    }
-
-    const params = new URLSearchParams({
-      '$where': `report_received_date >= '${sinceStr}T00:00:00.000'`,
-      '$order': 'report_received_date DESC',
-      '$limit': 5000
-    });
-
-    const url = `${API_BASE}?${params}`;
-    const resp = await fetch(url);
-    if (!resp.ok) throw new Error(`API error: ${resp.status}`);
-    const data = await resp.json();
-
-    // Cache it
-    try {
-      localStorage.setItem(CACHE_KEY, JSON.stringify({
-        ts: Date.now(),
-        days: days,
-        data: data
-      }));
-    } catch(e) {}
-
-    return data;
-  }
-
-  function getCachedData(days) {
-    try {
-      const raw = localStorage.getItem(CACHE_KEY);
-      if (!raw) return null;
-      const cache = JSON.parse(raw);
-      if (cache.days !== days) return null;
-      if (Date.now() - cache.ts > CACHE_TTL) return null;
-      return cache.data;
-    } catch(e) { return null; }
-  }
-
-  // ── PARSE & NORMALIZE ──
-  function normalizeRecall(r) {
-    const reportDate = r.report_received_date ? new Date(r.report_received_date) : null;
-    const daysAgo = reportDate ? Math.floor((Date.now() - reportDate.getTime()) / 86400000) : 999;
-    const parkOutside = (r.park_outside_advisory || '').toLowerCase() === 'yes';
-    const doNotDrive = (r.do_not_drive_advisory || '').toLowerCase() === 'yes';
-    const isCritical = doNotDrive || parkOutside;
-    const affected = parseInt(r.potentially_affected) || 0;
-
-    return {
-      id: r.nhtsa_id || '',
-      date: reportDate,
-      dateStr: reportDate ? reportDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : 'Unknown',
-      daysAgo,
-      manufacturer: r.manufacturer || 'Unknown',
-      subject: r.subject || 'No subject',
-      component: r.component || '',
-      type: r.recall_type || 'Vehicle',
-      affected,
-      affectedStr: affected ? affected.toLocaleString() : '—',
-      description: r.recall_description || '',
-      consequence: r.consequence_summary || '',
-      corrective: r.corrective_action || '',
-      parkOutside,
-      doNotDrive,
-      isCritical,
-      isNew: daysAgo <= 2,
-      nhtsaId: r.nhtsa_id || '',
-      completionRate: r.completion_rate_blanknot_reported || ''
-    };
-  }
-
-  // ── RENDER STATS ──
-  function renderStats(recalls) {
-    const total = recalls.length;
-    const critical = recalls.filter(r => r.isCritical).length;
-    const vehicles = recalls.filter(r => r.type === 'Vehicle').length;
-    const equipment = recalls.filter(r => r.type === 'Equipment').length;
-    const tires = recalls.filter(r => r.type === 'Tire').length;
-    const carseats = recalls.filter(r => r.type === 'Child Seat').length;
-
-    document.getElementById('statTotal').textContent = total.toLocaleString();
-    document.getElementById('statCritical').textContent = critical;
-    document.getElementById('statVehicle').textContent = vehicles;
-    document.getElementById('statEquipment').textContent = equipment;
-    document.getElementById('statTire').textContent = tires;
-    document.getElementById('statCarseat').textContent = carseats;
-
-    const days = document.getElementById('dateRange').value;
-    document.getElementById('statRange').textContent = `Past ${days} days`;
-  }
-
-  // ── RENDER RECALL CARD ──
-  function renderCard(recall) {
-    const typeClass = {
-      'Vehicle': 'type-vehicle',
-      'Equipment': 'type-equipment',
-      'Tire': 'type-tire',
-      'Child Seat': 'type-carseat'
-    }[recall.type] || 'type-vehicle';
-
-    let cardClass = 'recall-card';
-    if (recall.doNotDrive) cardClass += ' is-critical';
-    else if (recall.parkOutside) cardClass += ' is-warning';
-    else if (recall.isNew) cardClass += ' is-new';
-
-    let badges = '';
-    if (recall.doNotDrive) badges += '<span class="badge badge-critical">⛔ Do Not Drive</span>';
-    if (recall.parkOutside) badges += '<span class="badge badge-warning">🅿️ Park Outside</span>';
-    if (recall.isNew) badges += '<span class="badge badge-new">NEW</span>';
-
-    return `
-      <div class="${cardClass}" onclick="this.classList.toggle('expanded')">
-        <div class="recall-top">
-          <div class="recall-headline">${esc(recall.manufacturer)}: ${esc(recall.subject)}</div>
-          <div class="recall-badges">${badges}</div>
-        </div>
-        <div class="recall-meta">
-          <span class="meta-tag ${typeClass}">${esc(recall.type)}</span>
-          <span class="meta-date">${recall.dateStr}</span>
-          ${recall.component ? `<span class="meta-component">${esc(recall.component)}</span>` : ''}
-          ${recall.affected ? `<span class="meta-affected">${recall.affectedStr} units</span>` : ''}
-        </div>
-        <div class="recall-summary">${esc(recall.description)}</div>
-        <div class="recall-details">
-          ${recall.consequence ? `
-            <div class="detail-section">
-              <div class="detail-label">Consequence</div>
-              <div class="detail-text">${esc(recall.consequence)}</div>
-            </div>` : ''}
-          ${recall.corrective ? `
-            <div class="detail-section">
-              <div class="detail-label">Corrective Action</div>
-              <div class="detail-text">${esc(recall.corrective)}</div>
-            </div>` : ''}
-          ${recall.nhtsaId ? `
-            <a class="recall-link" href="https://www.nhtsa.gov/recalls?nhtsaId=${recall.nhtsaId}" target="_blank">
-              View on NHTSA.gov →
-            </a>` : ''}
-        </div>
-      </div>`;
-  }
-
-  function esc(str) {
-    const d = document.createElement('div');
-    d.textContent = str;
-    return d.innerHTML;
-  }
-
-  // ── FILTER & RENDER LIST ──
-  // ── POPULATE MANUFACTURER DROPDOWN ──
-  function populateManufacturerDropdown() {
-    const select = document.getElementById('mfgFilter');
-    const mfgs = [...new Set(allRecalls.map(r => r.manufacturer))].sort((a, b) =>
-      a.localeCompare(b, undefined, { sensitivity: 'base' })
-    );
-
-    // Preserve current selection if still valid
-    const prev = select.value;
-    select.innerHTML = '<option value="all">All Manufacturers (' + mfgs.length + ')</option>';
-
-    // Group by first letter for easier scanning
-    mfgs.forEach(m => {
-      const count = allRecalls.filter(r => r.manufacturer === m).length;
-      const opt = document.createElement('option');
-      opt.value = m;
-      opt.textContent = `${m} (${count})`;
-      select.appendChild(opt);
-    });
-
-    // Restore selection
-    if (prev && mfgs.includes(prev)) {
-      select.value = prev;
-      activeMfg = prev;
-    } else {
-      select.value = 'all';
-      activeMfg = 'all';
-    }
-  }
-
-  // ── FILTER & SORT ──
-  function applyFilters() {
-    const query = document.getElementById('searchInput').value.toLowerCase().trim();
-    const sortMode = document.getElementById('sortBy').value;
-
-    filteredRecalls = allRecalls.filter(r => {
-      if (activeType !== 'all' && r.type !== activeType) return false;
-      if (activeMfg !== 'all' && r.manufacturer !== activeMfg) return false;
-      if (query) {
-        const haystack = [r.manufacturer, r.subject, r.component, r.description, r.nhtsaId]
-          .join(' ').toLowerCase();
-        return haystack.includes(query);
-      }
-      return true;
-    });
-
-    // Always float criticals to top, then apply chosen sort within each group
-    filteredRecalls.sort((a, b) => {
-      if (a.isCritical !== b.isCritical) return a.isCritical ? -1 : 1;
-
-      switch (sortMode) {
-        case 'manufacturer':
-          return a.manufacturer.localeCompare(b.manufacturer, undefined, { sensitivity: 'base' })
-            || (b.date || 0) - (a.date || 0);
-        case 'affected':
-          return (b.affected - a.affected) || (b.date || 0) - (a.date || 0);
-        case 'component':
-          return a.component.localeCompare(b.component, undefined, { sensitivity: 'base' })
-            || (b.date || 0) - (a.date || 0);
-        case 'date':
-        default:
-          return (b.date || 0) - (a.date || 0);
-      }
-    });
-
-    currentPage = 1;
-    renderList();
-    renderStats(allRecalls);
-    document.getElementById('resultCount').textContent =
-      `${filteredRecalls.length} of ${allRecalls.length} recalls`;
-  }
-
-  function renderList() {
-    const container = document.getElementById('recallList');
-    const start = (currentPage - 1) * PAGE_SIZE;
-    const pageItems = filteredRecalls.slice(start, start + PAGE_SIZE);
-
-    if (filteredRecalls.length === 0) {
-      container.innerHTML = '<div class="empty-state">No recalls match your filters.</div>';
-      document.getElementById('pagination').innerHTML = '';
-      return;
-    }
-
-    container.innerHTML = pageItems.map(renderCard).join('');
-    renderPagination();
-  }
-
-  function renderPagination() {
-    const totalPages = Math.ceil(filteredRecalls.length / PAGE_SIZE);
-    const pag = document.getElementById('pagination');
-
-    if (totalPages <= 1) {
-      pag.innerHTML = '';
-      return;
-    }
-
-    let html = '';
-    html += `<button class="page-btn" onclick="goPage(${currentPage - 1})" ${currentPage === 1 ? 'disabled' : ''}>← Prev</button>`;
-
-    const range = getPageRange(currentPage, totalPages);
-    for (const p of range) {
-      if (p === '...') {
-        html += '<span class="page-info">…</span>';
-      } else {
-        html += `<button class="page-btn ${p === currentPage ? 'active' : ''}" onclick="goPage(${p})">${p}</button>`;
-      }
-    }
-
-    html += `<button class="page-btn" onclick="goPage(${currentPage + 1})" ${currentPage === totalPages ? 'disabled' : ''}>Next →</button>`;
-    pag.innerHTML = html;
-  }
-
-  function getPageRange(current, total) {
-    if (total <= 7) return Array.from({length: total}, (_, i) => i + 1);
-    const pages = [];
-    pages.push(1);
-    if (current > 3) pages.push('...');
-    for (let i = Math.max(2, current - 1); i <= Math.min(total - 1, current + 1); i++) {
-      pages.push(i);
-    }
-    if (current < total - 2) pages.push('...');
-    pages.push(total);
-    return pages;
-  }
-
-  window.goPage = function(p) {
-    const totalPages = Math.ceil(filteredRecalls.length / PAGE_SIZE);
-    if (p < 1 || p > totalPages) return;
-    currentPage = p;
-    renderList();
-    window.scrollTo({ top: 300, behavior: 'smooth' });
-  };
-
-  // ── INIT ──
-  async function init() {
-    const days = parseInt(document.getElementById('dateRange').value);
-    try {
-      const raw = await fetchRecalls(days);
-      allRecalls = raw.map(normalizeRecall);
-
-      // Check for new criticals (seeds seen list on first load, alerts on subsequent)
-      checkForNewCriticals(allRecalls);
-
-      populateManufacturerDropdown();
-      applyFilters();
-      lastFetchTime = Date.now();
-      document.getElementById('lastUpdated').textContent =
-        `Updated ${new Date().toLocaleString('en-US', { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' })}`;
-
-      // Start auto-refresh cycle
-      startAutoRefresh();
-    } catch(err) {
-      document.getElementById('recallList').innerHTML =
-        `<div class="empty-state">Error loading data: ${esc(err.message)}<br>
-        <button onclick="location.reload()" style="margin-top:12px;padding:8px 16px;border:1px solid var(--border);border-radius:6px;background:var(--surface);cursor:pointer;font-family:inherit;">Retry</button></div>`;
-    }
-  }
-
-  // ── EVENT LISTENERS ──
-  document.getElementById('searchInput').addEventListener('input', debounce(applyFilters, 250));
-
-  document.getElementById('dateRange').addEventListener('change', function() {
-    localStorage.removeItem(CACHE_KEY);
-    document.getElementById('recallList').innerHTML = `
-      <div class="loading-state">
-        <div class="spinner"></div>
-        <div>Fetching recalls…</div>
-      </div>`;
-    init();
-  });
-
-  document.getElementById('typeFilters').addEventListener('click', function(e) {
-    if (!e.target.classList.contains('filter-btn')) return;
-    document.querySelectorAll('#typeFilters .filter-btn').forEach(b => b.classList.remove('active'));
-    e.target.classList.add('active');
-    activeType = e.target.dataset.filter;
-    applyFilters();
-  });
-
-  document.getElementById('mfgFilter').addEventListener('change', function() {
-    activeMfg = this.value;
-    applyFilters();
-  });
-
-  document.getElementById('sortBy').addEventListener('change', function() {
-    applyFilters();
-  });
-
-  function debounce(fn, ms) {
-    let t;
-    return function() {
-      clearTimeout(t);
-      t = setTimeout(fn, ms);
-    };
-  }
-
-  // ── GO ──
-  updateNotifUI();
-  init();
-})();
+const App=(function(){'use strict';
+const PAGE=25,TTL=6*36e5,REFRESH=6*36e5,NK='recall_notif',SK='recall_seen';
+const S={nhtsa:{all:[],filtered:[],page:1,type:'all',mfg:'all',sort:'date',loaded:false},cpsc:{all:[],filtered:[],page:1,sort:'date',loaded:false},fda:{all:[],filtered:[],page:1,fdaType:'all',cls:'all',sort:'date',loaded:false},usda:{all:[],filtered:[],page:1,sort:'date',loaded:false}};
+let activeTab='nhtsa';
+function esc(s){const d=document.createElement('div');d.textContent=s;return d.innerHTML}
+function fmtD(d){return d?d.toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'}):'Unknown'}
+function fmtN(n){return n?n.toLocaleString():'—'}
+function dAgo(d){return d?Math.floor((Date.now()-d.getTime())/864e5):999}
+function db(fn,ms){let t;return function(){clearTimeout(t);t=setTimeout(fn,ms)}}
+function cS(k,v){try{localStorage.setItem(k,JSON.stringify({ts:Date.now(),data:v}))}catch(e){}}
+function cG(k){try{const c=JSON.parse(localStorage.getItem(k));return c&&Date.now()-c.ts<TTL?c.data:null}catch(e){return null}}
+// Notifications
+function isN(){return localStorage.getItem(NK)==='true'}
+function uNUI(){const b=document.getElementById('notifBtn'),l=document.getElementById('notifLabel');if(isN()&&Notification.permission==='granted'){b.classList.add('enabled');l.textContent='Alerts On'}else{b.classList.remove('enabled');l.textContent='Alerts Off'}}
+async function toggleNotif(){if(!('Notification'in window)){alert('Browser does not support notifications.');return}if(isN()){localStorage.setItem(NK,'false');uNUI();return}const p=await Notification.requestPermission();localStorage.setItem(NK,p==='granted'?'true':'false');uNUI();if(p==='granted')new Notification('Recall Watch — Alerts Enabled',{body:'You\'ll be notified when critical recalls are posted.'})}
+function gSeen(){try{return JSON.parse(localStorage.getItem(SK)||'[]')}catch(e){return[]}}
+function mSeen(ids){try{localStorage.setItem(SK,JSON.stringify([...new Set([...gSeen(),...ids])].slice(-600)))}catch(e){}}
+function chkCrit(items,ag){const cr=items.filter(r=>r.isCritical);if(!cr.length)return;const seen=gSeen();const fresh=cr.filter(r=>!seen.includes(r.uid));mSeen(cr.map(r=>r.uid));if(!fresh.length)return;showToast(fresh.length+' new critical '+ag+' recall'+(fresh.length>1?'s':'')+' detected');if(isN()&&Notification.permission==='granted')new Notification('🚨 '+fresh.length+' Critical '+ag+' Recall'+(fresh.length>1?'s':''),{body:fresh.slice(0,3).map(r=>r.headline).join('\n'),tag:'recall-'+ag,requireInteraction:true})}
+function showToast(m){document.getElementById('toastText').textContent=m;document.getElementById('toastBanner').classList.add('visible');setTimeout(()=>document.getElementById('toastBanner').classList.remove('visible'),12e3)}
+function dismissToast(){document.getElementById('toastBanner').classList.remove('visible')}
+// Shared render
+function rCard(r){let c='recall-card';if(r.isCritical)c+=' is-critical';else if(r.isWarning)c+=' is-warning';else if(r.isNew)c+=' is-new';return`<div class="${c}" onclick="this.classList.toggle('expanded')"><div class="recall-top"><div class="recall-headline">${esc(r.headline)}</div><div class="recall-badges">${r.badges}</div></div><div class="recall-meta">${r.metaHtml}</div><div class="recall-summary">${esc(r.summary)}</div><div class="recall-details">${r.detailsHtml}</div></div>`}
+function rList(t){const s=S[t],el=document.getElementById(t+'-list');const items=s.filtered.slice((s.page-1)*PAGE,s.page*PAGE);if(!s.filtered.length){el.innerHTML='<div class="empty-state">No recalls match your filters.</div>';document.getElementById(t+'-pagination').innerHTML='';return}el.innerHTML=items.map(rCard).join('');rPag(t);document.getElementById(t+'-result-count').textContent=s.filtered.length+' of '+s.all.length+' recalls'}
+function rPag(t){const s=S[t],tot=Math.ceil(s.filtered.length/PAGE),el=document.getElementById(t+'-pagination');if(tot<=1){el.innerHTML='';return}let h=`<button class="page-btn" onclick="App.goPage('${t}',${s.page-1})" ${s.page===1?'disabled':''}>← Prev</button>`;const rng=pRng(s.page,tot);for(const p of rng){if(p==='...')h+='<span class="page-info">…</span>';else h+=`<button class="page-btn ${p===s.page?'active':''}" onclick="App.goPage('${t}',${p})">${p}</button>`}h+=`<button class="page-btn" onclick="App.goPage('${t}',${s.page+1})" ${s.page===tot?'disabled':''}>Next →</button>`;el.innerHTML=h}
+function pRng(c,t){if(t<=7)return Array.from({length:t},(_,i)=>i+1);const p=[1];if(c>3)p.push('...');for(let i=Math.max(2,c-1);i<=Math.min(t-1,c+1);i++)p.push(i);if(c<t-2)p.push('...');p.push(t);return p}
+function goPage(t,p){const s=S[t],tot=Math.ceil(s.filtered.length/PAGE);if(p<1||p>tot)return;s.page=p;rList(t);window.scrollTo({top:200,behavior:'smooth'})}
+function sortIt(s){s.filtered.sort((a,b)=>{if(a.isCritical!==b.isCritical)return a.isCritical?-1:1;switch(s.sort){case'manufacturer':case'firm':case'name':return a.headline.localeCompare(b.headline)||(b.date||0)-(a.date||0);case'affected':return(b.affected||0)-(a.affected||0)||(b.date||0)-(a.date||0);case'component':return(a.component||'').localeCompare(b.component||'')||(b.date||0)-(a.date||0);default:return(b.date||0)-(a.date||0)}})}
+const searchSvg='<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>';
+
+// ═══════ NHTSA ═══════
+async function fetchNhtsa(){const c=cG('nhtsa_d');if(c)return c;const d=new Date();d.setDate(d.getDate()-90);const u=`https://data.transportation.gov/resource/6axg-epim.json?$where=report_received_date>='${d.toISOString().split('T')[0]}T00:00:00.000'&$order=report_received_date DESC&$limit=5000`;const r=await fetch(u);if(!r.ok)throw new Error('NHTSA '+r.status);const j=await r.json();cS('nhtsa_d',j);return j}
+function nNhtsa(r){const dt=r.report_received_date?new Date(r.report_received_date):null;const park=(r.park_outside_advisory||'').toLowerCase()==='yes';const dnd=(r.do_not_drive_advisory||'').toLowerCase()==='yes';const af=parseInt(r.potentially_affected)||0;let bg='';if(dnd)bg+='<span class="badge badge-critical">⛔ Do Not Drive</span>';if(park)bg+='<span class="badge badge-warning">🅿️ Park Outside</span>';if(dAgo(dt)<=2)bg+='<span class="badge badge-new">NEW</span>';const tp=r.recall_type||'Vehicle';let mt=`<span class="meta-tag tag-nhtsa">${esc(tp)}</span><span class="meta-date">${fmtD(dt)}</span>`;if(r.component)mt+=`<span class="meta-detail">${esc(r.component)}</span>`;if(af)mt+=`<span class="meta-detail">${fmtN(af)} units</span>`;let det='';if(r.consequence_summary)det+=`<div class="detail-section"><div class="detail-label">Consequence</div><div class="detail-text">${esc(r.consequence_summary)}</div></div>`;if(r.corrective_action)det+=`<div class="detail-section"><div class="detail-label">Corrective Action</div><div class="detail-text">${esc(r.corrective_action)}</div></div>`;if(r.nhtsa_id)det+=`<a class="recall-link" href="https://www.nhtsa.gov/recalls?nhtsaId=${r.nhtsa_id}" target="_blank">View on NHTSA.gov →</a>`;return{uid:'n-'+(r.nhtsa_id||Math.random()),date:dt,headline:(r.manufacturer||'Unknown')+': '+(r.subject||''),summary:r.recall_description||'',badges:bg,metaHtml:mt,detailsHtml:det,isCritical:dnd||park,isWarning:park&&!dnd,isNew:dAgo(dt)<=2,manufacturer:r.manufacturer||'Unknown',component:r.component||'',type:tp,affected:af}}
+function initNhtsaCtrl(){const s=S.nhtsa;document.getElementById('nhtsa-controls').innerHTML=`<div class="search-box">${searchSvg}<input type="text" id="nhtsa-search" placeholder="Search manufacturer, component…"></div><select class="ctrl-select" id="nhtsa-mfg"><option value="all">All Manufacturers</option></select><div class="filter-pills" id="nhtsa-pills"><button class="pill active" data-v="all">All</button><button class="pill" data-v="Vehicle">Vehicles</button><button class="pill" data-v="Equipment">Equipment</button><button class="pill" data-v="Tire">Tires</button><button class="pill" data-v="Child Seat">Car Seats</button></div><select class="ctrl-select" id="nhtsa-sort"><option value="date">Newest</option><option value="manufacturer">Manufacturer A–Z</option><option value="affected">Most Units</option><option value="component">Component A–Z</option></select>`;const mfgs=[...new Set(s.all.map(r=>r.manufacturer))].sort();const sel=document.getElementById('nhtsa-mfg');mfgs.forEach(m=>{const o=document.createElement('option');o.value=m;o.textContent=m+' ('+s.all.filter(r=>r.manufacturer===m).length+')';sel.appendChild(o)});document.getElementById('nhtsa-search').addEventListener('input',db(()=>fNhtsa(),250));sel.addEventListener('change',()=>{s.mfg=sel.value;fNhtsa()});document.getElementById('nhtsa-sort').addEventListener('change',e=>{s.sort=e.target.value;fNhtsa()});document.getElementById('nhtsa-pills').addEventListener('click',e=>{if(!e.target.classList.contains('pill'))return;document.querySelectorAll('#nhtsa-pills .pill').forEach(p=>p.classList.remove('active'));e.target.classList.add('active');s.type=e.target.dataset.v;fNhtsa()})}
+function fNhtsa(){const s=S.nhtsa,q=(document.getElementById('nhtsa-search')?.value||'').toLowerCase().trim();s.filtered=s.all.filter(r=>{if(s.type!=='all'&&r.type!==s.type)return false;if(s.mfg!=='all'&&r.manufacturer!==s.mfg)return false;if(q&&![r.manufacturer,r.headline,r.component,r.summary].join(' ').toLowerCase().includes(q))return false;return true});sortIt(s);s.page=1;rList('nhtsa');sNhtsa()}
+function sNhtsa(){const a=S.nhtsa.all;document.getElementById('nhtsa-stats').innerHTML=`<div class="stat-card" style="border-left:3px solid var(--accent)"><div class="stat-label">Total</div><div class="stat-value">${a.length}</div><div class="stat-sub">Past 90 days</div></div><div class="stat-card" style="border-left:3px solid var(--critical-red)"><div class="stat-label">🚨 Critical</div><div class="stat-value">${a.filter(r=>r.isCritical).length}</div><div class="stat-sub">Do Not Drive / Park Outside</div></div><div class="stat-card" style="border-left:3px solid var(--nhtsa)"><div class="stat-label">Vehicles</div><div class="stat-value">${a.filter(r=>r.type==='Vehicle').length}</div></div><div class="stat-card" style="border-left:3px solid var(--cpsc)"><div class="stat-label">Equipment</div><div class="stat-value">${a.filter(r=>r.type==='Equipment').length}</div></div>`}
+
+// ═══════ CPSC ═══════
+async function fetchCpsc(){const c=cG('cpsc_d');if(c)return c;const d=new Date();d.setDate(d.getDate()-90);const u=`https://www.saferproducts.gov/RestWebServices/Recall?format=json&RecallDateStart=${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;const r=await fetch(u);if(!r.ok)throw new Error('CPSC '+r.status);const j=await r.json();cS('cpsc_d',j);return j}
+function nCpsc(r){const dt=r.RecallDate?new Date(r.RecallDate):null;const isN=dAgo(dt)<=2;let bg=isN?'<span class="badge badge-new">NEW</span>':'';const haz=(r.Hazards||[]).map(h=>h.Name).join(', ');const prod=(r.Products||[]).map(p=>p.Name).join(', ');let mt=`<span class="meta-tag tag-cpsc">Consumer Product</span><span class="meta-date">${fmtD(dt)}</span>`;if(haz)mt+=`<span class="meta-detail">${esc(haz)}</span>`;let det='';if(r.Description)det+=`<div class="detail-section"><div class="detail-label">Description</div><div class="detail-text">${esc(r.Description)}</div></div>`;const rem=(r.Remedies||[]).map(x=>x.Name).join('; ');if(rem)det+=`<div class="detail-section"><div class="detail-label">Remedy</div><div class="detail-text">${esc(rem)}</div></div>`;if(r.URL)det+=`<a class="recall-link" href="${esc(r.URL)}" target="_blank">View on CPSC.gov →</a>`;return{uid:'c-'+(r.RecallID||Math.random()),date:dt,headline:r.Title||prod||'Consumer Product Recall',summary:(r.Description||'').substring(0,500),badges:bg,metaHtml:mt,detailsHtml:det,isCritical:false,isWarning:false,isNew:isN,hazard:haz,product:prod}}
+function initCpscCtrl(){document.getElementById('cpsc-controls').innerHTML=`<div class="search-box">${searchSvg}<input type="text" id="cpsc-search" placeholder="Search product, hazard, description…"></div><select class="ctrl-select" id="cpsc-sort"><option value="date">Newest</option><option value="name">Title A–Z</option></select>`;document.getElementById('cpsc-search').addEventListener('input',db(()=>fCpsc(),250));document.getElementById('cpsc-sort').addEventListener('change',e=>{S.cpsc.sort=e.target.value;fCpsc()})}
+function fCpsc(){const s=S.cpsc,q=(document.getElementById('cpsc-search')?.value||'').toLowerCase().trim();s.filtered=q?s.all.filter(r=>[r.headline,r.summary,r.hazard,r.product].join(' ').toLowerCase().includes(q)):s.all.slice();sortIt(s);s.page=1;rList('cpsc');sCpsc()}
+function sCpsc(){const a=S.cpsc.all;const hc={};a.forEach(r=>{if(r.hazard)r.hazard.split(', ').forEach(h=>{hc[h]=(hc[h]||0)+1})});const top=Object.entries(hc).sort((a,b)=>b[1]-a[1]).slice(0,3);document.getElementById('cpsc-stats').innerHTML=`<div class="stat-card" style="border-left:3px solid var(--cpsc)"><div class="stat-label">Total Recalls</div><div class="stat-value">${a.length}</div><div class="stat-sub">Past 90 days</div></div><div class="stat-card" style="border-left:3px solid var(--accent)"><div class="stat-label">New (48hr)</div><div class="stat-value">${a.filter(r=>r.isNew).length}</div></div>${top.map(([h,c])=>`<div class="stat-card"><div class="stat-label">${esc(h)}</div><div class="stat-value">${c}</div></div>`).join('')}`}
+
+// ═══════ FDA ═══════
+async function fetchFda(){const c=cG('fda_d');if(c)return c;const d=new Date();d.setDate(d.getDate()-90);const ds=d.toISOString().split('T')[0].replace(/-/g,'');const now=new Date().toISOString().split('T')[0].replace(/-/g,'');const eps=[{t:'Food',u:`https://api.fda.gov/food/enforcement.json?search=report_date:[${ds}+TO+${now}]&limit=100`},{t:'Drug',u:`https://api.fda.gov/drug/enforcement.json?search=report_date:[${ds}+TO+${now}]&limit=100`},{t:'Device',u:`https://api.fda.gov/device/enforcement.json?search=report_date:[${ds}+TO+${now}]&limit=100`}];const res=[];for(const ep of eps){try{const r=await fetch(ep.u);if(r.ok){const j=await r.json();(j.results||[]).forEach(i=>{i._t=ep.t;res.push(i)})}}catch(e){}}cS('fda_d',res);return res}
+function nFda(r){const dt=r.report_date?new Date(r.report_date.replace(/(\d{4})(\d{2})(\d{2})/,'$1-$2-$3')):null;const cls=r.classification||'';const c1=cls.match(/^Class I$/i);const c2=cls.includes('II')&&!cls.includes('III');let bg='';if(c1)bg+='<span class="badge badge-class1">Class I</span>';else if(c2)bg+='<span class="badge badge-class2">Class II</span>';else if(cls.includes('III'))bg+='<span class="badge badge-class3">Class III</span>';if(dAgo(dt)<=2)bg+='<span class="badge badge-new">NEW</span>';const ft=r._t||'Food';const tm={Food:'tag-fda',Drug:'tag-cpsc',Device:'tag-nhtsa'};let mt=`<span class="meta-tag ${tm[ft]||'tag-fda'}">${esc(ft)}</span><span class="meta-date">${fmtD(dt)}</span>`;if(cls)mt+=`<span class="meta-detail">${esc(cls)}</span>`;if(r.status)mt+=`<span class="meta-detail">${esc(r.status)}</span>`;let det='';if(r.code_info)det+=`<div class="detail-section"><div class="detail-label">Product Codes</div><div class="detail-text">${esc(r.code_info)}</div></div>`;if(r.distribution_pattern)det+=`<div class="detail-section"><div class="detail-label">Distribution</div><div class="detail-text">${esc(r.distribution_pattern)}</div></div>`;if(r.recalling_firm)det+=`<div class="detail-section"><div class="detail-label">Recalling Firm</div><div class="detail-text">${esc(r.recalling_firm)}</div></div>`;return{uid:'f-'+(r.recall_number||r.event_id||Math.random()),date:dt,headline:(r.recalling_firm||'Unknown')+': '+(r.product_description||'').substring(0,120),summary:r.reason_for_recall||'',badges:bg,metaHtml:mt,detailsHtml:det,isCritical:!!c1,isWarning:c2,isNew:dAgo(dt)<=2,fdaType:ft,classification:cls,firm:r.recalling_firm||''}}
+function initFdaCtrl(){document.getElementById('fda-controls').innerHTML=`<div class="search-box">${searchSvg}<input type="text" id="fda-search" placeholder="Search product, firm, reason…"></div><div class="filter-pills" id="fda-tp"><button class="pill active" data-v="all">All</button><button class="pill" data-v="Food">Food</button><button class="pill" data-v="Drug">Drug</button><button class="pill" data-v="Device">Device</button></div><div class="filter-pills" id="fda-cl"><button class="pill active" data-v="all">All Classes</button><button class="pill" data-v="I">Class I</button><button class="pill" data-v="II">Class II</button><button class="pill" data-v="III">Class III</button></div><select class="ctrl-select" id="fda-sort"><option value="date">Newest</option><option value="firm">Firm A–Z</option></select>`;document.getElementById('fda-search').addEventListener('input',db(()=>fFda(),250));document.getElementById('fda-sort').addEventListener('change',e=>{S.fda.sort=e.target.value;fFda()});document.getElementById('fda-tp').addEventListener('click',e=>{if(!e.target.classList.contains('pill'))return;document.querySelectorAll('#fda-tp .pill').forEach(p=>p.classList.remove('active'));e.target.classList.add('active');S.fda.fdaType=e.target.dataset.v;fFda()});document.getElementById('fda-cl').addEventListener('click',e=>{if(!e.target.classList.contains('pill'))return;document.querySelectorAll('#fda-cl .pill').forEach(p=>p.classList.remove('active'));e.target.classList.add('active');S.fda.cls=e.target.dataset.v;fFda()})}
+function fFda(){const s=S.fda,q=(document.getElementById('fda-search')?.value||'').toLowerCase().trim();s.filtered=s.all.filter(r=>{if(s.fdaType!=='all'&&r.fdaType!==s.fdaType)return false;if(s.cls!=='all'){const cc=r.classification||'';if(s.cls==='I'&&!cc.match(/^Class I$/i))return false;if(s.cls==='II'&&!cc.includes('II'))return false;if(s.cls==='III'&&!cc.includes('III'))return false}if(q&&![r.headline,r.summary,r.firm].join(' ').toLowerCase().includes(q))return false;return true});sortIt(s);s.page=1;rList('fda');sFda()}
+function sFda(){const a=S.fda.all;document.getElementById('fda-stats').innerHTML=`<div class="stat-card" style="border-left:3px solid var(--fda)"><div class="stat-label">Total</div><div class="stat-value">${a.length}</div><div class="stat-sub">Past 90 days</div></div><div class="stat-card" style="border-left:3px solid var(--critical-red)"><div class="stat-label">Class I</div><div class="stat-value">${a.filter(r=>r.isCritical).length}</div><div class="stat-sub">Most serious</div></div><div class="stat-card" style="border-left:3px solid var(--nhtsa)"><div class="stat-label">Food</div><div class="stat-value">${a.filter(r=>r.fdaType==='Food').length}</div></div><div class="stat-card" style="border-left:3px solid var(--cpsc)"><div class="stat-label">Drug</div><div class="stat-value">${a.filter(r=>r.fdaType==='Drug').length}</div></div><div class="stat-card" style="border-left:3px solid var(--usda)"><div class="stat-label">Device</div><div class="stat-value">${a.filter(r=>r.fdaType==='Device').length}</div></div>`}
+
+// ═══════ USDA ═══════
+async function fetchUsda(){const c=cG('usda_d');if(c)return c;const u='https://www.fsis.usda.gov/fsis/api/recall/v/1';const r=await fetch(u);if(!r.ok)throw new Error('USDA '+r.status);const j=await r.json();cS('usda_d',j);return j}
+function nUsda(r){const ds=r.field_date_publish||r.field_recall_date||'';const dt=ds?new Date(ds):null;const cls=r.field_recall_classification||'';const c1=cls.includes('I')&&!cls.includes('II')&&!cls.includes('III');const c2=cls.includes('II')&&!cls.includes('III');const risk=r.field_risk_level||'';let bg='';if(c1)bg+='<span class="badge badge-class1">Class I</span>';else if(c2)bg+='<span class="badge badge-class2">Class II</span>';if(dAgo(dt)<=2)bg+='<span class="badge badge-new">NEW</span>';let mt=`<span class="meta-tag tag-usda">Meat/Poultry</span><span class="meta-date">${fmtD(dt)}</span>`;if(risk)mt+=`<span class="meta-detail">${esc(risk)}</span>`;if(r.field_recall_quantity)mt+=`<span class="meta-detail">${esc(r.field_recall_quantity)}</span>`;let det='';const sum=(r.field_summary_value||'').replace(/<[^>]+>/g,'');if(sum)det+=`<div class="detail-section"><div class="detail-label">Summary</div><div class="detail-text">${esc(sum)}</div></div>`;if(r.field_states)det+=`<div class="detail-section"><div class="detail-label">Distribution</div><div class="detail-text">${esc(r.field_states)}</div></div>`;if(r.field_establishments)det+=`<div class="detail-section"><div class="detail-label">Establishment</div><div class="detail-text">${esc(r.field_establishments)}</div></div>`;return{uid:'u-'+(r.nid||Math.random()),date:dt,headline:r.field_title||'USDA Recall',summary:sum.substring(0,500),badges:bg,metaHtml:mt,detailsHtml:det,isCritical:c1||risk.toLowerCase().includes('high'),isWarning:c2,isNew:dAgo(dt)<=2,risk:risk,classification:cls}}
+function initUsdaCtrl(){document.getElementById('usda-controls').innerHTML=`<div class="search-box">${searchSvg}<input type="text" id="usda-search" placeholder="Search product, company, state…"></div><select class="ctrl-select" id="usda-sort"><option value="date">Newest</option><option value="name">Title A–Z</option></select>`;document.getElementById('usda-search').addEventListener('input',db(()=>fUsda(),250));document.getElementById('usda-sort').addEventListener('change',e=>{S.usda.sort=e.target.value;fUsda()})}
+function fUsda(){const s=S.usda,q=(document.getElementById('usda-search')?.value||'').toLowerCase().trim();const cut=new Date();cut.setDate(cut.getDate()-90);s.filtered=(q?s.all.filter(r=>[r.headline,r.summary].join(' ').toLowerCase().includes(q)):s.all.slice()).filter(r=>r.date&&r.date>=cut);sortIt(s);s.page=1;rList('usda');sUsda()}
+function sUsda(){const cut=new Date();cut.setDate(cut.getDate()-90);const a=S.usda.all.filter(r=>r.date&&r.date>=cut);document.getElementById('usda-stats').innerHTML=`<div class="stat-card" style="border-left:3px solid var(--usda)"><div class="stat-label">Total</div><div class="stat-value">${a.length}</div><div class="stat-sub">Past 90 days</div></div><div class="stat-card" style="border-left:3px solid var(--critical-red)"><div class="stat-label">High Risk / Class I</div><div class="stat-value">${a.filter(r=>r.isCritical).length}</div></div><div class="stat-card" style="border-left:3px solid var(--accent)"><div class="stat-label">New (48hr)</div><div class="stat-value">${a.filter(r=>r.isNew).length}</div></div>`}
+
+// ═══════ TAB SWITCHING ═══════
+function switchTab(t){activeTab=t;document.querySelectorAll('.tab-btn').forEach(b=>b.classList.toggle('active',b.dataset.tab===t));document.querySelectorAll('.tab-panel').forEach(p=>p.classList.toggle('active',p.id==='panel-'+t));if(!S[t].loaded)loadTab(t)}
+async function loadTab(t){try{let raw,norm,ctrl,filt;switch(t){case'nhtsa':raw=await fetchNhtsa();norm=nNhtsa;ctrl=initNhtsaCtrl;filt=fNhtsa;break;case'cpsc':raw=await fetchCpsc();norm=nCpsc;ctrl=initCpscCtrl;filt=fCpsc;break;case'fda':raw=await fetchFda();norm=nFda;ctrl=initFdaCtrl;filt=fFda;break;case'usda':raw=await fetchUsda();norm=nUsda;ctrl=initUsdaCtrl;filt=fUsda;break}S[t].all=raw.map(norm);S[t].loaded=true;ctrl();filt();chkCrit(S[t].all,t.toUpperCase());updCounts()}catch(e){document.getElementById(t+'-list').innerHTML=`<div class="empty-state">Error loading ${t.toUpperCase()}: ${esc(e.message)}<br><button onclick="App.retryTab('${t}')" style="margin-top:10px;padding:7px 14px;border:1px solid var(--border);border-radius:6px;background:var(--surface);cursor:pointer;font-family:inherit">Retry</button></div>`}}
+function retryTab(t){S[t].loaded=false;loadTab(t)}
+function updCounts(){document.getElementById('countNhtsa').textContent=S.nhtsa.all.length||'—';document.getElementById('countCpsc').textContent=S.cpsc.all.length||'—';document.getElementById('countFda').textContent=S.fda.all.length||'—';const cut=new Date();cut.setDate(cut.getDate()-90);document.getElementById('countUsda').textContent=S.usda.all.filter(r=>r.date&&r.date>=cut).length||'—'}
+
+// ═══════ AUTO-REFRESH ═══════
+function startRefresh(){setInterval(async()=>{['nhtsa_d','cpsc_d','fda_d','usda_d'].forEach(k=>localStorage.removeItem(k));const fetchers={nhtsa:[fetchNhtsa,nNhtsa,fNhtsa],cpsc:[fetchCpsc,nCpsc,fCpsc],fda:[fetchFda,nFda,fFda],usda:[fetchUsda,nUsda,fUsda]};for(const[t,[fetcher,norm,filt]]of Object.entries(fetchers)){if(S[t].loaded){try{const raw=await fetcher();const items=raw.map(norm);chkCrit(items,t.toUpperCase());S[t].all=items;filt()}catch(e){console.warn('Refresh '+t,e)}}}updCounts();document.getElementById('lastUpdated').textContent='Updated '+new Date().toLocaleString('en-US',{month:'short',day:'numeric',hour:'numeric',minute:'2-digit'})},REFRESH)}
+
+// ═══════ INIT ═══════
+async function init(){uNUI();document.getElementById('tabsBar').addEventListener('click',e=>{const b=e.target.closest('.tab-btn');if(!b)return;switchTab(b.dataset.tab)});await loadTab('nhtsa');document.getElementById('lastUpdated').textContent='Updated '+new Date().toLocaleString('en-US',{month:'short',day:'numeric',hour:'numeric',minute:'2-digit'});setTimeout(()=>loadTab('cpsc'),500);setTimeout(()=>loadTab('fda'),1500);setTimeout(()=>loadTab('usda'),2500);startRefresh()}
+init();
+return{toggleNotif,dismissToast,goPage,retryTab}})();
 </script>
 </body>
 </html>
